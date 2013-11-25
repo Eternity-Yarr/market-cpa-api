@@ -138,6 +138,12 @@ private function curl_oauth_exec($url) {
 
 $api = new Market_API_v2($cc_key, $cc_secret, $token, $campaignId);
 
-print_r($api->GET_Orders());
+// print_r(json_decode($api->GET_Order(2)));
+
+$fp = fopen('/var/www-ssl/debug_post.log','a+');
+fwrite($fp, print_r($_POST,1));
+fclose($fp);
+print_r($_GET);
+
 
 ?>
