@@ -8,7 +8,7 @@ include('dbo.class.php');
 // Bitrix implementation of abstract class dbo
 include('bitrix.class.php');
 
-class Market_API_v2{
+class Market_API_v2 {
 
     private $baseurl = 'https://api.partner.market.yandex.ru/v2/';
     private $campaignId = 'my_campaign';
@@ -116,51 +116,51 @@ class Market_API_v2{
     }
 
 
-  function POST_Cart($db, $data){
+    function POST_Cart($db, $data){
 
-echo "<pre>";
-print_r($data);
-echo "</pre>";
+	echo "<pre>";
+	print_r($data);
+	echo "</pre>";
 
-if ($db->inStock(4545)) echo "true"; else echo "false";
-// Query for store
+	if ($db->inStock(4545)) echo "true"; else echo "false";
 
-
-
-}
-
-  function POST_OrderAccept(){}
-
-  function POST_OrderStatus(){}
-
-  function PUT_OrderStatus(){}
-
-  function PUT_DeliveryMethod(){}
-
-  function GET_Orders()  {
-
-    $url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders.json';
-    $ret = $this->curl_oauth_exec($url);
-    return $ret;
-
-    }
-  function GET_Order($orderId){
-
-    $url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders/'.$orderId.'.json';
-    $ret = $this->curl_oauth_exec($url);
-    return $ret;
 
 
     }
+
+    function POST_OrderAccept(){}
+
+    function POST_OrderStatus(){}
+
+    function PUT_OrderStatus(){}
+
+    function PUT_DeliveryMethod(){}
+
+    function GET_Orders()  {
+
+	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders.json';
+	$ret = $this->curl_oauth_exec($url);
+	return $ret;
+
+    }
+
+    function GET_Order($orderId){
+
+	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders/'.$orderId.'.json';
+	$ret = $this->curl_oauth_exec($url);
+
+	return $ret;
+    }
+
+    function error_400($db=false){
+	header('HTTP/1.0 400 Bad Request');
+	if ($db) $db->close();
+	exit();
+    }
+
 }
 
-function error_400(){
 
-header('HTTP/1.0 400 Bad Request');
-exit();
-
-
-}
 $api = new Market_API_v2($cc_key, $cc_secret, $token, $campaignId);
 
 // Some bitrix specific API thingies
@@ -180,7 +180,7 @@ case 'cart':
 // $data = json_decode($HTTP_RAW_POST_DATA);
 $data = json_decode($raw_data);
 if ($data === NULL) {
-error_400();
+$api->error_400($db);
 }
 $output = $api->POST_cart($db, $data);
 break;
@@ -195,7 +195,7 @@ case '':
 break;
 
 default:
-error_400();
+$api->error_400($db);
 break;
 
 }
@@ -207,6 +207,8 @@ break;
 // $fp = fopen('/var/www-ssl/debug_post.log','a+');
 // fwrite($fp, print_r(json_decode($HTTP_RAW_POST_DATA),1));
 // fclose($fp);
+
+$db->close();
 
 
 ?>
