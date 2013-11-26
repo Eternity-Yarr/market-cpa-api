@@ -171,7 +171,7 @@ class Market_API_v2 {
 		'type'		=> 'PICKUP', 
 		'serviceName'   => 'Самовывоз', 
 		'price'		=> 0, 
-		'dates'		=> array ( 'fromDate' => date('d-m-Y', time())),
+		'dates'		=> array ( 'fromDate' => date('d-m-Y', time()),'toDate' => date('d-m-Y', time()+24*60*60)),
 		'outlets'	=> $outlets_list );
 	}
 	if ($grand_total < $this->payment_threshold) {
