@@ -1,4 +1,3 @@
 RewriteEngine On
-
 RewriteRule ^api/(.*)$ api.php?route=$1 [L]
 

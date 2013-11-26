@@ -1,6 +1,12 @@
 <?php
 
-include('config.inc.php');
+include('config.inc.php');  // Organization specific stuff
+include('dbconn.php');  // Host specific thingies
+
+include('dbo.class.php');
+
+// Bitrix implementation of abstract class dbo
+include('bitrix.class.php');
 
 class Market_API_v2{
 
@@ -109,7 +115,16 @@ private function curl_oauth_exec($url) {
 }
 
 
-  function POST_Cart(){}
+  function POST_Cart($data){
+
+echo "<pre>";
+print_r($data);
+echo "</pre>";
+
+// Query for store
+
+
+}
 
   function POST_OrderAccept(){}
 
@@ -136,14 +151,59 @@ private function curl_oauth_exec($url) {
     }
 }
 
+function error_400(){
+
+header('HTTP/1.0 400 Bad Request');
+exit();
+
+
+}
 $api = new Market_API_v2($cc_key, $cc_secret, $token, $campaignId);
+
+// Some bitrix specific API thingies
+
+$db = new dbo_bitrix($DBLogin,$DBPass, $DBName);
+$stock =$db->inStock(5585);
+print_r(gettype($stock));
+$route = isset($_GET['route']) ? $_GET['route'] : '';
+
+$a = new stdClass();
+
+$raw_data = '{"cart":{"currency":"RUR","items":[{"feedId":9997,"offerId":"5585","feedCategoryId":"1","offerName":"Ноутбук Sony VAIO FIT 15E SVF1521P1R (Core i5 3337U 1800 Mhz/15.5\"/1366x768/6144Mb/750Gb/DVD-RW/Wi-Fi/Bluetooth/Win 8 64 ... ","count":1}],"delivery":{"region":{"id":213,"name":"Москва","type":"CITY","parent":{"id":1,"name":"Москва и Московская область","type":"SUBJECT_FEDERATION","parent":{"id":3,"name":"Центр","type":"COUNTRY_DISTRICT","parent":{"id":225,"name":"Россия","type":"COUNTRY"}}}}}}}';
+
+switch ($route) {
+
+case 'cart':
+$data = json_decode($HTTP_RAW_POST_DATA);
+$data = json_decode($raw_data);
+if ($data === NULL) {
+error_400();
+}
+$output = $api->POST_cart($data);
+break;
+
+case 'order/accept':
+break;
+
+case 'order/status':
+break;
+
+case '':
+break;
+
+default:
+error_400();
+break;
+
+}
+
+
 
 // print_r(json_decode($api->GET_Order(2)));
 
-$fp = fopen('/var/www-ssl/debug_post.log','a+');
-fwrite($fp, print_r($_POST,1));
-fclose($fp);
-print_r($_GET);
+// $fp = fopen('/var/www-ssl/debug_post.log','a+');
+// fwrite($fp, print_r(json_decode($HTTP_RAW_POST_DATA),1));
+// fclose($fp);
 
 
 ?>
