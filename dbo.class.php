@@ -4,7 +4,8 @@
 
 abstract class dbo extends mysqli {
 
-    protected $link;
+    protected $link;  		// mysqli link holder
+    public $outlets;  		// available outlets id
 
     public final function __construct($user,$pass,$db) {
 
@@ -16,6 +17,7 @@ abstract class dbo extends mysqli {
     }
 
     abstract public function inStock($id);
+    abstract public function getPrice($id);
 
     function close() {
 
