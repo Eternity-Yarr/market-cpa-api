@@ -41,7 +41,11 @@ class Market_API_v2 {
 
 // statuses
 
-    private $STATUS = array(
+    public $DELIVERY = array ( 'DELIVERY' => 'Доставка' , 'PICKUP' => 'Самовывоз' );
+
+    public $PAYMENTS = array ( 'CASH_ON_DELIVERY' => 'Курьеру', 'SHOP_PREPAID' => 'Предоплата' );
+
+    public $STATUS = array(
     
   'RESERVED' => 
     array(	'Заказ зарезервирован',
@@ -64,7 +68,7 @@ class Market_API_v2 {
 
 // substatuses
 
-    private $SUBSTATUS = array(
+    public $SUBSTATUS = array(
 
   'RESERVATION_EXPIRED' =>
     array(	'Покупатель не завершил оформление зарезервированного заказа вовремя',
@@ -78,13 +82,13 @@ class Market_API_v2 {
   'USER_CHANGED_MIND' =>
     array(	'Покупатель отменил заказ по собственным причинам',
 		'Передумал'),
-  'REFUSED_DELIVERY' =>
+  'USER_REFUSED_DELIVERY' =>
     array(	'Покупателя не устраивают условия доставки',
 		'Доставка не устраивает'),
-  'REFUSED_PRODUCT' => 
+  'USER_REFUSED_PRODUCT' =>
     array(	'Покупателю не подошел товар',
 		'Товар не устраивает'),
-  'REFUSED_QUALITY' =>
+  'USER_REFUSED_QUALITY' =>
     array(	'Покупателя не устраивает качество товара',
 		'Качество низкое'),
   'SHOP_FAILED' =>
@@ -99,13 +103,13 @@ class Market_API_v2 {
 
     // Possible transitions:
 
-    private $TRANSITIONS = array(
+    public $TRANSITIONS = array(
 
     'PROCESSING' => array('DELIVERY', 'CANCELLED'),
     'DELIVERY' => array('PICKUP', 'DELIVERED', 'CANCELLED'),
     'PICKUP' => array('DELIVERY', 'CANCELLED'));
 
-    private $SUBSTATUS_CHOICES = array(
+    public $SUBSTATUS_CHOICES = array(
 
     'PROCESSING' => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'SHOP_FAILED', 'REPLACING_ORDER'),
     'DELIVERY' 	 => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'USER_REFUSED_QUALITY', 'SHOP_FAILED'),
@@ -325,6 +329,13 @@ $api->validate_auth();  // validating Authorization token in headers
 $data = json_decode($HTTP_RAW_POST_DATA);
 if ($data === NULL) { $api->error_400($db); }  // If no data recieved - blame yandex.
 if ($output = $api->POST_OrderStatus($db,$data)) $api->ok_200(""); else $api->error_500($db);
+
+break;
+
+case 'orders':
+$response = json_decode($api->GET_Orders());
+$orders = $response->orders;
+include('market.tpl.php');
 
 break;
 
