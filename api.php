@@ -10,26 +10,26 @@ include('bitrix.class.php');
 
 class Market_API_v2{
 
-private $baseurl = 'https://api.partner.market.yandex.ru/v2/';
+    private $baseurl = 'https://api.partner.market.yandex.ru/v2/';
+    private $campaignId = 'my_campaign';
+    private $cc_key = 'my_key';
+    private $cc_secret = 'my_secret';
+    private $token ='my_token';
+    private $login ='mylogin';
 
 
-private $campaignId = 'my_campaign';
-private $cc_key = 'my_key';
-private $cc_secret = 'my_secret';
-private $token ='my_token';
+    function __construct($key, $secret, $token, $campaignId, $login) {
 
-function __construct($key, $secret, $token, $campaignId) {
-
-$this->cc_key = $key;
-$this->cc_secret = $secret;
-$this->token = $token;
-$this->campaignId = $campaignId;
-
-}
+	$this->cc_key = $key;
+	$this->cc_secret = $secret;
+	$this->token = $token;
+	$this->campaignId = $campaignId;
+	$this->login = $login;
+    }
 
 // statuses
 
-private $STATUS = array(
+    private $STATUS = array(
     
   'RESERVED' => 
     array(	'Заказ зарезервирован',
@@ -52,7 +52,7 @@ private $STATUS = array(
 
 // substatuses
 
-private $SUBSTATUS = array(
+    private $SUBSTATUS = array(
 
   'RESERVATION_EXPIRED' =>
     array(	'Покупатель не завершил оформление зарезервированного заказа вовремя',
@@ -85,43 +85,46 @@ private $SUBSTATUS = array(
     array(	'Магазин не обработал заказ вовремя',
 		'Не успели обработать'));
 
-// Possible transitions:
+    // Possible transitions:
 
-private $TRANSITIONS = array(
+    private $TRANSITIONS = array(
+
     'PROCESSING' => array('DELIVERY', 'CANCELLED'),
     'DELIVERY' => array('PICKUP', 'DELIVERED', 'CANCELLED'),
     'PICKUP' => array('DELIVERY', 'CANCELLED'));
 
-private $SUBSTATUS_CHOICES = array(
+    private $SUBSTATUS_CHOICES = array(
+
     'PROCESSING' => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'SHOP_FAILED', 'REPLACING_ORDER'),
     'DELIVERY' 	 => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'USER_REFUSED_QUALITY', 'SHOP_FAILED'),
     'PICKUP'  	 => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'USER_REFUSED_QUALITY', 'SHOP_FAILED'));
 
-private function curl_oauth_exec($url) {
 
-    $ch = curl_init();
+    private function curl_oauth_exec($url) {
 
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: 
-	OAuth 
-	oauth_token="'.$this->token.'",
-	oauth_client_id="8b9dbca197e547e191cfe5d1b087d90d",
-	oauth_login="babalina"'));
-    curl_setopt($ch, CURLOPT_URL, $url );
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-    return curl_exec($ch);
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: 
+		OAuth 
+		oauth_token="'.$this->token.'",
+		oauth_client_id="'.$this->cc_key.'",
+		oauth_login="'.$this->login.'"'));
+	curl_setopt($ch, CURLOPT_URL, $url );
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+
+	return curl_exec($ch);
+    }
 
 
-
-}
-
-
-  function POST_Cart($data){
+  function POST_Cart($db, $data){
 
 echo "<pre>";
 print_r($data);
 echo "</pre>";
 
+if ($db->inStock(4545)) echo "true"; else echo "false";
 // Query for store
+
 
 
 }
@@ -164,8 +167,7 @@ $api = new Market_API_v2($cc_key, $cc_secret, $token, $campaignId);
 // those credentials variables are system-wide-set in dbconn.php include
 
 $db = new dbo_bitrix($DBLogin,$DBPassword, $DBName);
-$stock = $db->inStock(5585);
-print_r($stock);
+
 $route = isset($_GET['route']) ? $_GET['route'] : '';
 
 $a = new stdClass();
@@ -175,12 +177,12 @@ $raw_data = '{"cart":{"currency":"RUR","items":[{"feedId":9997,"offerId":"5585",
 switch ($route) {
 
 case 'cart':
-$data = json_decode($HTTP_RAW_POST_DATA);
+// $data = json_decode($HTTP_RAW_POST_DATA);
 $data = json_decode($raw_data);
 if ($data === NULL) {
 error_400();
 }
-$output = $api->POST_cart($data);
+$output = $api->POST_cart($db, $data);
 break;
 
 case 'order/accept':
