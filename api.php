@@ -201,9 +201,11 @@ class Market_API_v2 {
     }
 
     function POST_OrderStatus($db, $data){
+    $db->saveHistory($data->order->id, $data->order->status, $data->order);    
+    if ($res = $db->setStatus($data->order->id, $data->order->status, $data->order))
+    return true;
+    else return false;
 
-    $this->ni_501($db);
-    
     }
 
     function PUT_OrderStatus($db){
@@ -215,6 +217,7 @@ class Market_API_v2 {
 
     $this->ni_501($db);
     }
+
 
     function GET_Orders()  {
 
@@ -306,18 +309,22 @@ break;
 case 'order/accept':
 $api->validate_auth();  // validating Authorization token in headers
 
- $data = json_decode($HTTP_RAW_POST_DATA);
+$data = json_decode($HTTP_RAW_POST_DATA);
 if ($data === NULL) { $api->error_400($db); }  // If no data recieved - blame yandex.
 $output = $api->POST_OrderAccept($db,$data);
 if ($output) $api->ok_200($output); else $api->error_500($db);
 break;
 
 case 'order/status':
-// $api->validate_auth();  // validating Authorization token in headers
+$api->validate_auth();  // validating Authorization token in headers
 
-$test_data = '{"order":{"id":4817,"fake":true,"currency":"RUR","paymentType":"POSTPAID","paymentMethod":"CASH_ON_DELIVERY","status":"PROCESSING","creationDate":"26-11-2013 13:35:11","itemsTotal":57060,"total":57310,"delivery":{"type":"DELIVERY","price":250,"serviceName":"Собственная служба доставки","dates":{"fromDate":"27-11-2013","toDate":"27-11-2013"},"region":{"id":213,"name":"Москва","type":"CITY","parent":{"id":1,"name":"Москва и Московская область","type":"SUBJECT_FEDERATION","parent":{"id":3,"name":"Центр","type":"COUNTRY_DISTRICT","parent":{"id":225,"name":"Россия","type":"COUNTRY"}}}},"address":{"country":"Россия","city":"Москва","subway":"авиамоторная","street":"тестовая улица","house":"1","block":"2","entrance":"2","entryphone":"4","floor":"5","apartment":"3","recipient":"Тестовый Пацанчик","phone":"1234567"}},"buyer":{"id":"w4lBNsr2bC8=","lastName":"Кулешова","firstName":"Алина","phone":"1234567","email":"babalina@yandex.ru"},"items":[{"feedId":9997,"offerId":"5695","feedCategoryId":"160","offerName":"Графический планшет WACOM Intuos5 Pro L [PTH-851-RU]","price":20560,"count":1},{"feedId":9997,"offerId":"2770","feedCategoryId":"56","offerName":"Моноблок MSI Wind Top AE2712G-027 (Core i5 3470S 2900 Mhz/27\"/1920x1080/4096Mb/1000Gb/BlueRay/Wi-Fi/Bluetooth/Win 8 ... ","price":36500,"count":1}],"notes":"примечание"}}';
-$data = json_decode($test_data);
-$output = $api->POST_OrderStatus($db,$data);
+// $test_data = '{"order":{"id":4817,"fake":true,"currency":"RUR","paymentType":"POSTPAID","paymentMethod":"CASH_ON_DELIVERY","status":"PROCESSING","creationDate":"26-11-2013 13:35:11","itemsTotal":57060,"total":57310,"delivery":{"type":"DELIVERY","price":250,"serviceName":"Собственная служба доставки","dates":{"fromDate":"27-11-2013","toDate":"27-11-2013"},"region":{"id":213,"name":"Москва","type":"CITY","parent":{"id":1,"name":"Москва и Московская область","type":"SUBJECT_FEDERATION","parent":{"id":3,"name":"Центр","type":"COUNTRY_DISTRICT","parent":{"id":225,"name":"Россия","type":"COUNTRY"}}}},"address":{"country":"Россия","city":"Москва","subway":"авиамоторная","street":"тестовая улица","house":"1","block":"2","entrance":"2","entryphone":"4","floor":"5","apartment":"3","recipient":"Тестовый Пацанчик","phone":"1234567"}},"buyer":{"id":"w4lBNsr2bC8=","lastName":"Кулешова","firstName":"Алина","phone":"1234567","email":"babalina@yandex.ru"},"items":[{"feedId":9997,"offerId":"5695","feedCategoryId":"160","offerName":"Графический планшет WACOM Intuos5 Pro L [PTH-851-RU]","price":20560,"count":1},{"feedId":9997,"offerId":"2770","feedCategoryId":"56","offerName":"Моноблок MSI Wind Top AE2712G-027 (Core i5 3470S 2900 Mhz/27\"/1920x1080/4096Mb/1000Gb/BlueRay/Wi-Fi/Bluetooth/Win 8 ... ","price":36500,"count":1}],"notes":"примечание"}}';
+// $data = json_decode($test_data);
+
+
+$data = json_decode($HTTP_RAW_POST_DATA);
+if ($data === NULL) { $api->error_400($db); }  // If no data recieved - blame yandex.
+if ($output = $api->POST_OrderStatus($db,$data)) $api->ok_200(""); else $api->error_500($db);
 
 break;
 
