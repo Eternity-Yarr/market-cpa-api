@@ -90,7 +90,53 @@ foreach ($order->items as $item) {
 ?>
 <tr class="row"> <td colspan=3 class="text-right">Итого:&nbsp;<?=sprintf("%d&nbsp;руб.",$total)?></td></tr>
 	    </table>
-<? echo "<pre>"; print_r($order); echo "</pre>";?>
+<?php
+
+
+switch ($order->delivery->type) {
+
+case 'DELIVERY':
+?>
+Доставка:<br />
+<hr />
+Стоимость: <?=sprintf("%d&nbsp;руб.",$order->delivery->price)?><br />
+Дата: <?=$order->delivery->dates->toDate;?><br />
+Адрес: <pre><?=print_r($order->delivery->address,1);?></pre><br />
+<?php
+if (isset($order->buyer)) {
+?>
+Заказчик:<br />
+<pre>
+<?=print_r($order->buyer,1);?>
+</pre>
+<?php
+}
+break;
+
+case 'PICKUP':
+?>
+Самовывоз: <?=$outlet_names[$order->delivery->outletId]?><br/>
+Дата: <?=$order->delivery->dates->toDate;?><br />
+
+<?php
+if (isset($order->buyer)) {
+?>
+Заказчик:<br />
+<pre>
+<?=print_r($order->buyer,1);?>
+</pre>
+
+<?php
+}
+break;
+
+default:
+break;
+}
+?>
+<?
+// echo "<pre>"; print_r($order); echo "</pre>";
+?>
 		    </div>
 		    <div class="modal-footer">
 			<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
