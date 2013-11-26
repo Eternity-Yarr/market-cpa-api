@@ -161,10 +161,11 @@ exit();
 $api = new Market_API_v2($cc_key, $cc_secret, $token, $campaignId);
 
 // Some bitrix specific API thingies
+// those credentials variables are system-wide-set in dbconn.php include
 
-$db = new dbo_bitrix($DBLogin,$DBPass, $DBName);
-$stock =$db->inStock(5585);
-print_r(gettype($stock));
+$db = new dbo_bitrix($DBLogin,$DBPassword, $DBName);
+$stock = $db->inStock(5585);
+print_r($stock);
 $route = isset($_GET['route']) ? $_GET['route'] : '';
 
 $a = new stdClass();
