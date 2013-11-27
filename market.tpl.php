@@ -94,16 +94,12 @@ foreach ($orders as $order) {
   <div class="panel-body">
     <?if (isset($order->buyer)):?>
 <dl class="dl-horizontal">
-	<dt>Фамилия</dt>
-	<dd><?=$order->buyer->lastName;?></dd>
-	<dt>Имя</dt>
-	<dd><?=$order->buyer->firstName;?></dd>
-	<dt>Отчество</dt>
-	<dd><?=$order->buyer->middleName;?></dd>
-	<dt>Телефон</dt>
-	<dd><?=$order->buyer->phone;?></dd>
-	<dt>E-mail</dt>
-	<dd><?=$order->buyer->email;?></dd>
+	<?php
+	foreach ($order->buyer as $k => $v) {
+
+	if (isset($api->BUYER[$k])) { ?>
+	<dt><?=$api->BUYER[$k];?></dt><dd><?=$v;?></dd>
+	<?php } } ?>
 </dl>
 <?endif;?>
   </div>
