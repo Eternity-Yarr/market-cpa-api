@@ -1,3 +1,11 @@
+<?php
+/*
+ * market-cpa-api dealer-with
+ * v. 0.2 | https://github.com/Eternity-Yarr/market-cpa-api/
+ *
+ * CC0 1.0 license.
+ */
+?>
 <!DOCTYPE html>
 <html>
 	<head>
