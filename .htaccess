@@ -1,3 +1,14 @@
+#
+# Simple rewrite rule
+#
+# Examples:
+# https://blahblah.com/pathtoinstall/api/orders 	=> https://blahblah.com/pathtoinstall/api.php?route=orders
+# https://blahblah.com/pathtoinstall/api/order/accept 	=> https://blahblah.com/pathtoinstall/api.php?route=order/accept
+
+# etc..
+# Don't forget to allow overrides in vhost configuration file
+
+
 RewriteEngine On
 RewriteRule ^api/(.*)$ api.php?route=$1 [L]
 
