@@ -113,7 +113,11 @@ foreach ($orders as $order) {
 	<dd>
 	<form method="POST" action="<?=$baseurl."/put/status"?>">
 	<input type="hidden" name="order_id" value="<?=$order->id?>" />
-	<select name="new_status" id="order_<?=$order->id?>_status" disabled="disabled">
+	<select onchange=" 
+	    if ($(this).val()=='CANCELLED') 
+		{$('#substatus').css('visibility','visible');}
+	    else
+		{$('#substatus').css('visibility','hidden');} " name="new_status" id="order_<?=$order->id?>_status" disabled="disabled">
 	<option value="<?=$order->status?>" selected><?=$api->STATUS[$order->status][0];?></option>
 	<?php
 	if ($transitions) { ?>
@@ -121,6 +125,15 @@ foreach ($orders as $order) {
 	foreach ($transitions as $key => $possible_status ) { ?>
 	    <option value="<?=$key?>"><?=$possible_status[0];?></option>
 	<?php } ?>
+	</select>
+	<select  id="substatus" name="substatus" style="visibility:hidden;">
+	    <?php
+	    foreach ($api->SUBSTATUS_CHOICES[$order->status] as $key) {
+	    ?>
+	    <option value="<?=$key?>"><?=$api->SUBSTATUS[$key][1];?></option>
+	    <?php
+	    }
+	    ?>
 	</select>
 	<button
 	    class="btn btn-primary btn-xs"

@@ -279,7 +279,7 @@ class Market_API_v2 {
 
 	}
 
-    function PUT_OrderStatus($db,$id,$status,$baseurl){
+    function PUT_OrderStatus($db,$id,$status,$substatus, $baseurl){
 
     //
     // implementation of PUT order/status request
@@ -291,6 +291,8 @@ class Market_API_v2 {
 
 
 	$put_json = array("order"=> array("status" => $status));
+	if ($status == 'CANCELLED') $put_json['order']['substatus'] = $substatus;
+
 	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders/'.$id.'/status.json';
 	$res = $this->curl_oauth_exec($url, true, json_encode($put_json,JSON_UNESCAPED_UNICODE));
 
@@ -416,8 +418,11 @@ switch ($route) {
 	break;
 
     case 'put/status':
-	if (in_array($_POST['new_status'], array_keys($api->STATUS))) {
-	$api->PUT_OrderStatus($db,(int)$_POST['order_id'], $_POST['new_status'], $baseurl);
+	if (((in_array($_POST['new_status'], array_keys($api->STATUS))) AND ($_POST['new_status'] != 'CANCELLED')) 
+	    OR
+	    (($_POST['new_status']=='CANCELLED') AND (in_array($_POST['substatus'], array_keys($api->SUBSTATUS)))))
+	{
+	$api->PUT_OrderStatus($db,(int)$_POST['order_id'], $_POST['new_status'], $_POST['substatus'], $baseurl);
 	} else $api->error_500($db);
         break;
 
