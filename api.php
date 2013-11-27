@@ -144,12 +144,13 @@ class Market_API_v2 {
 	$res = array('cart' => array('items' => array(), 'deliveryOptions' => array(), 'paymentMethods' => array()));
 	$outlets = $db->outlets;
 	$grand_total = 0;
-
+	$delivery_price = $this->std_delivery;
+	$expensive_groups = $db->getExpensiveGroups();
 	foreach ($data->cart->items as $item) {
 
 	if ($stock = $db->inStock($item->offerId)) $delivery = true; else $delivery = false;
 	$outlets = array_intersect($outlets, $stock);
-
+	if (!in_array($item->feedCategoryId, $expensive_groups)) { $delivery_price = $this->special_delivery; }
 	if ($price = $db->getPrice($item->offerId)) {
 	$grand_total += $item->count * $price;
 	$res['cart']['items'][] = 
@@ -178,11 +179,10 @@ class Market_API_v2 {
 	$res['cart']['paymentMethods'] = $this->paymentMethods[0];
 	} else  {
 	$res['cart']['paymentMethods'] = $this->paymentMethods[1];}
-    
 	$res['cart']['deliveryOptions'][] = array( 
 	    'type' => 'DELIVERY', 
 	    'serviceName' => 'Собственная служба доставки', 
-	    'price' => 250, 
+	    'price' => $delivery_price, 
 	    'dates' => array ('fromDate' => date('d-m-Y', time() + 24*60*60))); 		//  Hardcoded for tomorrow
 
 	return $res;
