@@ -75,18 +75,11 @@ $total += $item->price * $item->count;
 
 <table class="table">
 	<tr class="row">
-		<th class="col-md-6 text-center">Покупатель</td>
-		<th class="col-md-6 text-center">
-
-
-
-
-
-		</td>
-	</tr>
-	<tr class="row">
 		<td class="col-md-6">
-<?if (isset($order->buyer)):?>
+<div class="panel panel-default">
+  <div class="panel-heading text-center"><h3 class="panel-title"><strong>Информация о покупателе</strong></h3></div>
+  <div class="panel-body">
+    <?if (isset($order->buyer)):?>
 <dl class="dl-horizontal">
 	<dt>Фамилия</dt>
 	<dd><?=$order->buyer->lastName;?></dd>
@@ -99,7 +92,29 @@ $total += $item->price * $item->count;
 	<dt>E-mail</dt>
 	<dd><?=$order->buyer->email;?></dd>
 </dl>
-<?endif;?>&nbsp;
+<?endif;?>
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading text-center"><h3 class="panel-title"><strong>Информация о заказе</strong></h3></div>
+  <div class="panel-body">
+<dl class="dl-horizontal">
+	<dt>Статус заказа</dt>
+	<dd>
+		<select disabled>
+  <option>132132</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+
+	</dd>
+</dl>
+  </div>
+</div>
+
 </td>
 
 
@@ -107,8 +122,10 @@ $total += $item->price * $item->count;
 
 <?switch ($order->delivery->type):
 case 'DELIVERY':?>
-<p class="text-center">Доставка: <?=number_format($order->delivery->price, 0, ',', ' ');?>&nbsp;руб. (<strong><?=$order->delivery->dates->toDate;?></strong>)</p>
 
+<div class="panel panel-default">
+  <div class="panel-heading"><h3 class="panel-title text-center"><strong>Доставка на <?=$order->delivery->dates->toDate;?></strong>&nbsp;(<?=number_format($order->delivery->price, 0, ',', ' ');?>&nbsp;руб.)</h3></div>
+  <div class="panel-body">
 <dl class="dl-horizontal">
 	<dt>Страна</dt>
 	<dd><?=$order->delivery->address->country;?></dd>
@@ -123,10 +140,14 @@ case 'DELIVERY':?>
 	<dt>Контактное лицо</dt>
 	<dd><?=$order->delivery->address->recipient;?></dd>
 </dl>
+  </div>
+</div>
+
+
 
 <?break;?>
 <?case 'PICKUP':?>
-<p class="text-center">Самовывоз:&nbsp;<?=$outlet_names[$order->delivery->outletId]?> (<strong><?=$order->delivery->dates->toDate;?></strong>)</p>
+<p class="text-center"><h3 class="panel-title text-center"><strong>Самовывоз на <?=$order->delivery->dates->toDate;?></strong>&nbsp;(из <?=$outlet_names[$order->delivery->outletId]?>)</h3></p>
 <?break;?>
 <?default:?>
 <p class="text-center">Не доставка и не самовывоз</p>

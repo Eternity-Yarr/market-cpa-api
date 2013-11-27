@@ -23,6 +23,7 @@ abstract class dbo extends mysqli {
     abstract public function setStatus($id,$status,$body);// Set new $status to order $id. Return true on success, and true on status CANCELLED even if
 							// there s no such order, according to yandex api. Returns false otherwise.
     abstract public function saveHistory($order_id,$status,$body);  // not really neccessary, just to track yandex movements
+    abstract public function getExpensiveGroups();	// returns ids of groups with expensive delivery items
 
     function close() {
 
