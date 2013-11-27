@@ -128,6 +128,27 @@ class Market_API_v2 {
     'DELIVERY' 	 => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'USER_REFUSED_QUALITY', 'SHOP_FAILED'),
     'PICKUP'  	 => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'USER_REFUSED_QUALITY', 'SHOP_FAILED'));
 
+    public $BUYER = array(
+    'firstName'	=> 'Имя покупателя',
+    'phone'		=> 'Номер телефона',
+    'email'		=> 'Электронная почта',
+    'lastName'		=> 'Фамилия покупателя',
+    'middleName'	=> 'Отчество покупателя');
+
+    public $ADDRESS = array(
+    'country'		=> 'Страна',
+    'city'		=> 'Город/село',
+    'house'		=> 'Номер дома',
+    'postcode'		=> 'Почтовый индекс',
+    'street'		=> 'Улица',
+    'subway'		=> 'Метро',
+    'block'		=> 'Корпус',
+    'entrance'		=> 'Подъезд',
+    'entryphone'	=> 'Домофон',
+    'floor'		=> 'Этаж',
+    'apartment'		=> 'Квартира',
+    'recipient'		=> 'ФИО получателя',
+    'phone'		=> 'Телефон получателя');
 
     private function curl_oauth_exec($url, $put=false, $put_json=false) {
 
@@ -250,7 +271,8 @@ class Market_API_v2 {
 	$res = $this->curl_oauth_exec($url, true, json_encode($put_json,JSON_UNESCAPED_UNICODE)); 
 	
 	if ($body = json_decode($res)) {
-	$db->setStatus($id, $status, $body);
+	$db->saveHistory($id, $status, $body->order);    
+	$db->setStatus($id, $status, $body->order);
 	} else $this->error_500($db);
 
 	header("HTTP 1.0 301 Moved Permanently");
