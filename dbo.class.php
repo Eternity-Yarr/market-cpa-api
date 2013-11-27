@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * market-cpa-api dealer-with
+ * v. 0.2 | https://github.com/Eternity-Yarr/market-cpa-api/
+ *
+ * CC0 1.0 license.
+ */
+
 // You should implement this simple methods by yourself, according to your CMS or DB scheme
 
 abstract class dbo extends mysqli {

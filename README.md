@@ -1,4 +1,4 @@
-market-cpa-api
+market-cpa-api v0.2
 ==============
 
 API to deal with new market CPA thingie
@@ -12,6 +12,12 @@ is pretty straightforward.
  - Customize anytyhing you need
  - Point your browser to https://youdomain/pathtoapi/api/orders  to see list
 
+##Requirements
+
+ - Apache w mod_rewrite for rewriting
+ - Bootstrap v3.0.0 installed
+ - PHP v5.4.x
+ - CURL enabled
 
 ##License
 
