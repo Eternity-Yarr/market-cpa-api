@@ -188,25 +188,25 @@ class Market_API_v2 {
 	$expensive_groups = $db->getExpensiveGroups();
 	foreach ($data->cart->items as $item) {
 
-	if ($stock = $db->inStock($item->offerId)) $delivery = true; else $delivery = false;
-	$outlets = array_intersect($outlets, $stock);
-	if (!in_array($item->feedCategoryId, $expensive_groups)) { $delivery_price = $this->special_delivery; }
-	if ($price = $db->getPrice($item->offerId)) {
-	$grand_total += $item->count * $price;
-	$res['cart']['items'][] =
-	    array(	'feedId'	=> $item->feedId,
-			'offerId'	=> $item->offerId,
-			'price'		=> (int)$price,
-			'count'		=> $item->count,
-			'delivery'	=> $delivery );
-	}
-        else error_500($db);
+	    if ($stock = $db->inStock($item->offerId)) $delivery = true; else $delivery = false;
+	    $outlets = array_intersect($outlets, $stock);
+	    if (!in_array($item->feedCategoryId, $expensive_groups)) { $delivery_price = $this->special_delivery; }
+	    if ($price = $db->getPrice($item->offerId)) {
+		$grand_total += $item->count * $price;
+		$res['cart']['items'][] =
+		    array(	'feedId'	=> $item->feedId,
+				'offerId'	=> $item->offerId,
+				'price'		=> (int)$price,
+				'count'		=> $item->count,
+				'delivery'	=> $delivery );
+	    }
+	    else error_500($db);
 
 	}
 	if (count($outlets)>0) {
 	    $outlets_list = array();
 	    foreach ($outlets as $outlet) {
-	    $outlets_list[] = array('id' => $outlet);
+		$outlets_list[] = array('id' => $outlet);
 	    }
 	    $res['cart']['deliveryOptions'][] = array(
 		'type'		=> 'PICKUP',
@@ -216,14 +216,14 @@ class Market_API_v2 {
 		'outlets'	=> $outlets_list );
 	}
 	if ($grand_total < $this->payment_threshold) {
-	$res['cart']['paymentMethods'] = $this->paymentMethods[0];
+	    $res['cart']['paymentMethods'] = $this->paymentMethods[0];
 	} else  {
-	$res['cart']['paymentMethods'] = $this->paymentMethods[1];}
-	$res['cart']['deliveryOptions'][] = array(
-	    'type' => 'DELIVERY',
-	    'serviceName' => 'Собственная служба доставки',
-	    'price' => $delivery_price,
-	    'dates' => array ('fromDate' => date('d-m-Y', time() + 24*60*60))); 		//  Hardcoded for tomorrow
+	    $res['cart']['paymentMethods'] = $this->paymentMethods[1];}
+	    $res['cart']['deliveryOptions'][] = array(
+		'type' => 'DELIVERY',
+		'serviceName' => 'Собственная служба доставки',
+		'price' => $delivery_price,
+		'dates' => array ('fromDate' => date('d-m-Y', time() + 24*60*60))); 		//  Hardcoded for "tomorrow"
 
 	return $res;
     }
@@ -271,8 +271,8 @@ class Market_API_v2 {
 	$res = $this->curl_oauth_exec($url, true, json_encode($put_json,JSON_UNESCAPED_UNICODE));
 
 	if ($body = json_decode($res)) {
-	$db->saveHistory($id, $status, $body->order);
-	$db->setStatus($id, $status, $body->order);
+	    $db->saveHistory($id, $status, $body->order);
+	    $db->setStatus($id, $status, $body->order);
 	} else $this->error_500($db);
 
 	header("HTTP 1.0 301 Moved Permanently");
@@ -292,7 +292,6 @@ class Market_API_v2 {
 	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders.json';
 	$ret = $this->curl_oauth_exec($url);
 	return $ret;
-
     }
 
     function GET_Order($orderId){
@@ -308,7 +307,6 @@ class Market_API_v2 {
 	header('HTTP/1.0 400 Bad Request');
 	if ($db) $db->close();
 	exit();
-
     }
 
 
@@ -317,7 +315,6 @@ class Market_API_v2 {
 	header('HTTP/1.0 500 Internal Server Error');
 	if ($db) $db->close();
 	exit();
-
     }
 
 
@@ -326,7 +323,6 @@ class Market_API_v2 {
 	header("HTTP/1.1 200 OK \r\n");
         header("Content-Type: application/json;charset=utf-8\r\n");
         echo (json_encode($output,JSON_UNESCAPED_UNICODE));
-
     }
 
 
@@ -335,7 +331,6 @@ class Market_API_v2 {
 	header("HTTP/1.0 501 Not implemented");
 	if ($db) $db->close();
 	exit();
-
     }
 
 
@@ -352,9 +347,7 @@ class Market_API_v2 {
 	die();
 
 	} else return true;
-
     }
-
 }
 
 
