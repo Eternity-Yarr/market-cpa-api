@@ -150,21 +150,19 @@ foreach ($orders as $order) {
 case 'DELIVERY':?>
 
 <div class="panel panel-default">
-  <div class="panel-heading"><h3 class="panel-title text-center"><strong>Доставка на <?=$order->delivery->dates->toDate;?></strong>&nbsp;(<?=number_format($order->delivery->price, 0, ',', ' ');?>&nbsp;руб.)</h3></div>
+  <div class="panel-heading">
+    <h3 class="panel-title text-center">
+	<strong>Доставка на <?=$order->delivery->dates->toDate;?></strong>&nbsp;(<?=number_format($order->delivery->price, 0, ',', ' ');?>&nbsp;руб.)
+    </h3>
+  </div>
   <div class="panel-body">
 <dl class="dl-horizontal">
-	<dt>Страна</dt>
-	<dd><?=$order->delivery->address->country;?></dd>
-	<dt>Город</dt>
-	<dd><?=$order->delivery->address->city;?></dd>
-	<dt>Улица</dt>
-	<dd><?=$order->delivery->address->street;?></dd>
-	<dt>Дом</dt>
-	<dd><?=$order->delivery->address->house;?></dd>
-	<dt>Телефон</dt>
-	<dd><?=$order->delivery->address->phone;?></dd>
-	<dt>Контактное лицо</dt>
-	<dd><?=$order->delivery->address->recipient;?></dd>
+	<?php 
+	foreach ($order->delivery->address as $k => $v) {
+	
+	if (isset($api->ADDRESS[$k])) {  ?>
+	<dt><?=$api->ADDRESS[$k];?></dt><dd><?=$v;?></dd>
+	<?php  } } ?>
 </dl>
   </div>
 </div>
