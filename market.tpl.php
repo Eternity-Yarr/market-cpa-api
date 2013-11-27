@@ -57,7 +57,7 @@ $total += $item->price * $item->count;
 						<td><?=$order->id?></td>
 						<td><?=$order->creationDate?></td>
 						<td <?=$title?>><?=$status?></td>
-						<td><?=sprintf("%d&nbsp;руб.",$total)?></td>
+						<td class="text-right"><?=number_format($total, 0, ',', ' ');?>&nbsp;руб.</td>
 						<td><?=$api->DELIVERY[$order->delivery->type]?></td>
 						<td><?=$payment?></td>
 						<td>
@@ -72,8 +72,75 @@ $total += $item->price * $item->count;
 			<h4 class="modal-title" id="myModalLabel">Заказ <?=$order->id?> от <?=$order->creationDate?></h4>
 		    </div>
 		    <div class="modal-body">
-	    <table class="table table-striped table-hover">
 
+<table class="table">
+	<tr class="row">
+		<th class="col-md-6 text-center">Покупатель</td>
+		<th class="col-md-6 text-center">
+
+
+
+
+
+		</td>
+	</tr>
+	<tr class="row">
+		<td class="col-md-6">
+<?if (isset($order->buyer)):?>
+<dl class="dl-horizontal">
+	<dt>Фамилия</dt>
+	<dd><?=$order->buyer->lastName;?></dd>
+	<dt>Имя</dt>
+	<dd><?=$order->buyer->firstName;?></dd>
+	<dt>Отчество</dt>
+	<dd><?=$order->buyer->middleName;?></dd>
+	<dt>Телефон</dt>
+	<dd><?=$order->buyer->phone;?></dd>
+	<dt>E-mail</dt>
+	<dd><?=$order->buyer->email;?></dd>
+</dl>
+<?endif;?>&nbsp;
+</td>
+
+
+<td class="col-md-6">
+
+<?switch ($order->delivery->type):
+case 'DELIVERY':?>
+<p class="text-center">Доставка: <?=number_format($order->delivery->price, 0, ',', ' ');?>&nbsp;руб. (<strong><?=$order->delivery->dates->toDate;?></strong>)</p>
+
+<dl class="dl-horizontal">
+	<dt>Страна</dt>
+	<dd><?=$order->delivery->address->country;?></dd>
+	<dt>Город</dt>
+	<dd><?=$order->delivery->address->city;?></dd>
+	<dt>Улица</dt>
+	<dd><?=$order->delivery->address->street;?></dd>
+	<dt>Дом</dt>
+	<dd><?=$order->delivery->address->house;?></dd>
+	<dt>Телефон</dt>
+	<dd><?=$order->delivery->address->phone;?></dd>
+	<dt>Контактное лицо</dt>
+	<dd><?=$order->delivery->address->recipient;?></dd>
+</dl>
+
+<?break;?>
+<?case 'PICKUP':?>
+<p class="text-center">Самовывоз:&nbsp;<?=$outlet_names[$order->delivery->outletId]?> (<strong><?=$order->delivery->dates->toDate;?></strong>)</p>
+<?break;?>
+<?default:?>
+<p class="text-center">Не доставка и не самовывоз</p>
+<?endswitch;?>
+</td>
+</tr>
+</table>
+
+	    <table class="table table-striped table-hover table-condensed">
+		<tr class="row">
+			<th>Наименование</th>
+			<th>Кол-во</th>
+			<th>Цена</th>
+		</tr>
 <?php
 
 foreach ($order->items as $item) {
@@ -81,59 +148,16 @@ foreach ($order->items as $item) {
 ?>
 <tr class="row">
 	      <td class="col-md-9 word-wrapped">[<?=$item->offerId?>] <?=$item->offerName?></td>
-	      <td class="col-md-1"><?=$item->count?></td>
-	      <td class="col-md-2"><?=sprintf("%d&nbsp;руб.",$item->price)?></td>
+	      <td class="col-md-1 text-center"><?=$item->count?></td>
+	      <td class="col-md-2 text-right"><?=number_format($item->price, 0, ',', ' ');?>&nbsp;руб.</td>
 
 </tr>
 <?php
 }
 ?>
-<tr class="row"> <td colspan=3 class="text-right">Итого:&nbsp;<?=sprintf("%d&nbsp;руб.",$total)?></td></tr>
+<tr class="row"> <td colspan=3 class="text-right">Итого:&nbsp;<strong><?=number_format($total, 0, ',', ' ');?>&nbsp;руб.</strong></td></tr>
 	    </table>
-<?php
 
-
-switch ($order->delivery->type) {
-
-case 'DELIVERY':
-?>
-Доставка:<br />
-<hr />
-Стоимость: <?=sprintf("%d&nbsp;руб.",$order->delivery->price)?><br />
-Дата: <?=$order->delivery->dates->toDate;?><br />
-Адрес: <pre><?=print_r($order->delivery->address,1);?></pre><br />
-<?php
-if (isset($order->buyer)) {
-?>
-Заказчик:<br />
-<pre>
-<?=print_r($order->buyer,1);?>
-</pre>
-<?php
-}
-break;
-
-case 'PICKUP':
-?>
-Самовывоз: <?=$outlet_names[$order->delivery->outletId]?><br/>
-Дата: <?=$order->delivery->dates->toDate;?><br />
-
-<?php
-if (isset($order->buyer)) {
-?>
-Заказчик:<br />
-<pre>
-<?=print_r($order->buyer,1);?>
-</pre>
-
-<?php
-}
-break;
-
-default:
-break;
-}
-?>
 <?
 // echo "<pre>"; print_r($order); echo "</pre>";
 ?>
