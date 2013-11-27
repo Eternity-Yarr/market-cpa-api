@@ -97,7 +97,7 @@ foreach ($orders as $order) {
 	<?php
 	foreach ($order->buyer as $k => $v) {
 
-	if (isset($api->BUYER[$k])) { ?>
+	if ((isset($api->BUYER[$k])) and ($v != '')) { ?>
 	<dt><?=$api->BUYER[$k];?></dt><dd><?=$v;?></dd>
 	<?php } } ?>
 </dl>
