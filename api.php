@@ -112,8 +112,8 @@ class Market_API_v2 {
     public $TRANSITIONS = array(
 
     'PROCESSING' => array('DELIVERY', 'CANCELLED'),
-    'DELIVERY' => array('PICKUP', 'DELIVERED', 'CANCELLED'),
-    'PICKUP' => array('DELIVERY', 'CANCELLED'));
+    'DELIVERY' => array( 'DELIVERED', 'CANCELLED'),
+    'PICKUP' => array('DELIVERED', 'CANCELLED'));
 
     public $SUBSTATUS_CHOICES = array(
 
@@ -122,15 +122,21 @@ class Market_API_v2 {
     'PICKUP'  	 => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'USER_REFUSED_QUALITY', 'SHOP_FAILED'));
 
 
-    private function curl_oauth_exec($url) {
+    private function curl_oauth_exec($url, $put=false, $put_json=false) {
 
         $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization:
+	$httpheader = array('Authorization:
 		OAuth
 		oauth_token="'.$this->token.'",
 		oauth_client_id="'.$this->cc_key.'",
-		oauth_login="'.$this->login.'"'));
+		oauth_login="'.$this->login.'"');
+	if (($put) AND ($put_json)) {
+	    $httpheader[] = 'Content-Type: application/json';
+	    $httpheader[] = 'Content-Length: ' . strlen($put_json);
+	    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+	    curl_setopt($ch, CURLOPT_POSTFIELDS,$put_json);
+	}
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $httpheader );
 	curl_setopt($ch, CURLOPT_URL, $url );
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
@@ -230,9 +236,24 @@ class Market_API_v2 {
 
 	}
 
-    function PUT_OrderStatus($db){
+    function PUT_OrderStatus($db,$id,$status,$baseurl){
 
-        $this->ni_501($db);
+	$put_json = array("order"=> array("status" => $status));
+	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders/'.$id.'/status.json';
+	$fp = fopen('/var/www-ssl/put.log','a+');
+	fwrite($fp, $url);
+	$res = $this->curl_oauth_exec($url, true, json_encode($put_json,JSON_UNESCAPED_UNICODE));
+	fwrite($fp,$res);
+	fclose($fp);
+
+	if ($body = json_decode($res)) {
+	$db->setStatus($id, $status, $body);
+	} else $this->error_500($db);
+
+	header("HTTP 1.0 301 Moved Permanently");
+	header("Location: ".$baseurl."/orders");
+
+
     }
 
     function PUT_DeliveryMethod($db){
@@ -352,7 +373,10 @@ switch ($route) {
 	include('market.tpl.php');
 	break;
 
-    case '':
+    case 'put/status':
+	if (in_array($_POST['new_status'], array_keys($api->STATUS))) {
+	$api->PUT_OrderStatus($db,(int)$_POST['order_id'], $_POST['new_status'], $baseurl);
+	} else $api->error_500($db);
         break;
 
     default:

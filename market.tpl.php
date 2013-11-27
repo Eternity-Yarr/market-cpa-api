@@ -45,13 +45,18 @@
 					</tr>
 <?php
 foreach ($orders as $order) {
-$status = $api->STATUS[$order->status][0];
-if (trim($order->substatus) != '') $title = "title=\"".$api->SUBSTATUS[$order->substatus][0]."\""; else $title = '';
-$total = 0;
-$payment = (isset($api->PAYMENTS[$order->paymentMethod])) ? $api->PAYMENTS[$order->paymentMethod] : 'Не указана';
-foreach ($order->items as $item) {
-$total += $item->price * $item->count;
-}
+    $status = $api->STATUS[$order->status][0];
+    $transitions = false;
+    if (isset($api->TRANSITIONS[$order->status])) {
+        $transitions = array();
+	foreach ($api->TRANSITIONS[$order->status] as $transition) {
+	$transitions[$transition] = $api->STATUS[$transition];
+	}
+    }
+    if (trim($order->substatus) != '') $title = "title=\"".$api->SUBSTATUS[$order->substatus][0]."\""; else $title = '';
+    $total = 0;
+    $payment = (isset($api->PAYMENTS[$order->paymentMethod])) ? $api->PAYMENTS[$order->paymentMethod] : 'Не указана';
+    foreach ($order->items as $item) {   $total += $item->price * $item->count; }
 ?>
 					<tr>
 						<td><?=$order->id?></td>
@@ -100,17 +105,33 @@ $total += $item->price * $item->count;
   <div class="panel-heading text-center"><h3 class="panel-title"><strong>Информация о заказе</strong></h3></div>
   <div class="panel-body">
 <dl class="dl-horizontal">
-	<dt>Статус заказа</dt>
+	<dt>Статус заказа:</dt>
 	<dd>
-		<select id="order_<?=$order->id?>_status" disabled="disabled">
-  <option>132132</option>
-  <option>2</option>
-  <option>3</option>
-  <option>4</option>
-  <option>5</option>
-</select>
-<button class="btn btn-primary btn-xs" onclick="$('#order_<?=$order->id?>_status').removeAttr('disabled'); $(this).attr('class', 'btn btn-danger btn-xs'); this.innerText = 'Сохранить';">Изменить...</button>
-
+	<form method="POST" action="<?=$baseurl."/put/status"?>">
+	<input type="hidden" name="order_id" value="<?=$order->id?>" />
+	<select name="new_status" id="order_<?=$order->id?>_status" disabled="disabled">
+	<option value="<?=$order->status?>" selected><?=$api->STATUS[$order->status][0];?></option>
+	<?php
+	if ($transitions) { ?>
+	<?php
+	foreach ($transitions as $key => $possible_status ) { ?>
+	    <option value="<?=$key?>"><?=$possible_status[0];?></option>
+	<?php } ?>
+	</select>
+	<button
+	    class="btn btn-primary btn-xs"
+	    onclick="
+		$('#order_<?=$order->id?>_status').removeAttr('disabled');
+		$(this).attr('class', 'btn btn-danger btn-xs');
+		this.innerText = 'Сохранить';
+		this.onclick ='';
+		return false;">
+	    Изменить...
+	</button>
+	<?php
+	}
+	?>
+	</form>
 	</dd>
 </dl>
   </div>
