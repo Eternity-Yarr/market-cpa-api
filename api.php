@@ -230,6 +230,13 @@ class Market_API_v2 {
 
 
     function POST_OrderAccept($db, $data){
+    //
+    // implementation of POST order/accept request
+    // http://api.yandex.ru/market/partner/doc/dg/reference/post-order-accept.xml
+    // takes json_decoded object and db link
+    // returns well formed array, for further json_encode and ouput 
+    // or false
+    //
 
     // Proper response structure
         $res = array('order'=> array('id' => "0", 'accepted' => false));
@@ -249,6 +256,14 @@ class Market_API_v2 {
     }
 
     function POST_OrderStatus($db, $data){
+    //
+    // implementation of POST order/status request
+    // http://api.yandex.ru/market/partner/doc/dg/reference/post-order-status.xml
+    // takes json_decoded object and db link
+    // returns true in case of success or false otherwise
+    // also logs history (if needed)
+    //
+
 
 	$db->saveHistory(
 	    $data->order->id, 
@@ -265,6 +280,15 @@ class Market_API_v2 {
 	}
 
     function PUT_OrderStatus($db,$id,$status,$baseurl){
+
+    //
+    // implementation of PUT order/status request
+    // http://api.yandex.ru/market/partner/doc/dg/reference/put-campaigns-id-orders-id-status.xml
+    // takes db link, id of order, new status and baseurl for further redirection 
+    // redirects 301 to orders list page, or error 500 otherwise
+    // logs history if needed
+    //
+
 
 	$put_json = array("order"=> array("status" => $status));
 	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders/'.$id.'/status.json';
