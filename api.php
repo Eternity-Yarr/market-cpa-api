@@ -11,12 +11,15 @@ include('bitrix.class.php');
 class Market_API_v2 {
 
     private $baseurl = 'https://api.partner.market.yandex.ru/v2/';
-    private $campaignId = 'my_campaign';
+
+    // Override this nonsense values with your own
+    private $campaignId = 'my_campaign';   
     private $cc_key = 'my_key';
     private $cc_secret = 'my_secret';
     private $token ='my_token';
     private $login ='mylogin';
     private $auth_token = 'token from partner interface';
+
     private $initial_status = 'PROCESSING';
 
     // hardcoded payment methods for current implementation
@@ -25,7 +28,9 @@ class Market_API_v2 {
     // limit cash_on_delivery method for orders with total price less than this threshold
     private $payment_threshold = 90000; 
 
+    // Delivery prices. We assume that customer buys items w expensive delivery, 500 RUR. 
     private $std_delivery = 500;
+    // If there's any items are present in cart, that delivered w special price - falling back to this option;
     private $special_delivery = 250;
 
 
@@ -37,6 +42,7 @@ class Market_API_v2 {
 	$this->campaignId = $campaignId;
 	$this->login = $login;
 	$this->auth_token = $auth;
+
     }
 
 // statuses
@@ -192,34 +198,46 @@ class Market_API_v2 {
     function POST_OrderAccept($db, $data){
 
     // Proper response structure
-    $res = array('order'=> array('id' => "0", 'accepted' => false));
+        $res = array('order'=> array('id' => "0", 'accepted' => false));
 
-    if ($success = $db->addOrder($data->order->id, $data->order, $this->initial_status, $data->order->fake == 1 ? 1 : 0 )) {
-    $res['order']['id'] = (string)$data->order->id;
-    $res['order']['accepted'] = true;
-    return $res;
-    } else {
-    return false;
-    }
+        if ($success = $db->addOrder(
+		$data->order->id, 
+		$data->order, 
+		$this->initial_status, 
+		$data->order->fake == 1 ? 1 : 0 )) {
+	    $res['order']['id'] = (string)$data->order->id;
+	    $res['order']['accepted'] = true;
+	    return $res;
+	} else {
+	    return false;
+	}
 
     }
 
     function POST_OrderStatus($db, $data){
-    $db->saveHistory($data->order->id, $data->order->status, $data->order);    
-    if ($res = $db->setStatus($data->order->id, $data->order->status, $data->order))
-    return true;
-    else return false;
 
-    }
+	$db->saveHistory(
+	    $data->order->id, 
+	    $data->order->status, 
+	    $data->order);    
+
+	if ($res = $db->setStatus(
+	    $data->order->id, 
+	    $data->order->status, 
+	    $data->order))
+	    return true;
+	else return false;
+
+	}
 
     function PUT_OrderStatus($db){
 
-    $this->ni_501($db);
+        $this->ni_501($db);
     }
 
     function PUT_DeliveryMethod($db){
 
-    $this->ni_501($db);
+	$this->ni_501($db);
     }
 
 
@@ -240,46 +258,54 @@ class Market_API_v2 {
     }
 
     function error_400($db=false){
+
 	header('HTTP/1.0 400 Bad Request');
 	if ($db) $db->close();
 	exit();
+
     }
 
+
     function error_500($db=false){
+
 	header('HTTP/1.0 500 Internal Server Error');
 	if ($db) $db->close();
 	exit();
+
     }
+
 
     function ok_200($output){
 
-    header("HTTP/1.1 200 OK \r\n");
-    header("Content-Type: application/json;charset=utf-8\r\n");
-    echo (json_encode($output,JSON_UNESCAPED_UNICODE));
+	header("HTTP/1.1 200 OK \r\n");
+        header("Content-Type: application/json;charset=utf-8\r\n");
+        echo (json_encode($output,JSON_UNESCAPED_UNICODE));
 
     }
+
 
     function ni_501($db){
 
-    header("HTTP/1.0 501 Not implemented");
-    if ($db) $db->close();
-    exit();
+	header("HTTP/1.0 501 Not implemented");
+	if ($db) $db->close();
+	exit();
 
     }
 
+
     function validate_auth(){
 
-    $headers = getallheaders();
-    if (
-    (!isset($headers['Authorization']))    
-    // There's no such field in headers
-    OR 
-    // field is present, but does not match proper value
-    ((isset($headers['Authorization'])) AND ($headers['Authorization']!= $this->auth_token)))  
-    {
-    header('HTTP/1.0 403 Unauthorized');
-    die();
-    } else return true;
+	$headers = getallheaders();
+	if (
+	(!isset($headers['Authorization']))    
+	// There's no such field in headers
+	OR 
+	// field is present, but does not match proper value
+	((isset($headers['Authorization'])) AND ($headers['Authorization']!= $this->auth_token)))  {
+	header('HTTP/1.0 403 Unauthorized');
+	die();
+
+	} else return true;
 
     }
 
@@ -295,59 +321,44 @@ $db = new dbo_bitrix($DBLogin,$DBPassword, $DBName);
 
 $route = isset($_GET['route']) ? $_GET['route'] : '';
 
-$a = new stdClass();
-
-
 switch ($route) {
 
-case 'cart':
-$api->validate_auth();  // validating Authorization token in headers
+    case 'cart':
+	$api->validate_auth();  // validating Authorization token in headers
+	$data = json_decode($HTTP_RAW_POST_DATA);
+	if ($data === NULL) { $api->error_400($db); }  // If no data recieved - blame yandex.
+	$output = $api->POST_cart($db, $data);
+	$api->ok_200($output);
+	break;
 
-$data = json_decode($HTTP_RAW_POST_DATA);
-if ($data === NULL) { $api->error_400($db); }  // If no data recieved - blame yandex.
+    case 'order/accept':
+	$api->validate_auth();  // validating Authorization token in headers
+	$data = json_decode($HTTP_RAW_POST_DATA);
+	if ($data === NULL) { $api->error_400($db); }  // If no data recieved - blame yandex.
+	$output = $api->POST_OrderAccept($db,$data);
+	if ($output) $api->ok_200($output); else $api->error_500($db);
+	break;
 
-$output = $api->POST_cart($db, $data);
-$api->ok_200($output);
-break;
+    case 'order/status':
+	$api->validate_auth();  // validating Authorization token in headers
+	$data = json_decode($HTTP_RAW_POST_DATA);
+	if ($data === NULL) { $api->error_400($db); }  // If no data recieved - blame yandex.
+	if ($output = $api->POST_OrderStatus($db,$data)) $api->ok_200(""); else $api->error_500($db);
+	break;
 
-case 'order/accept':
-$api->validate_auth();  // validating Authorization token in headers
+    case 'orders':
+	$response = json_decode($api->GET_Orders());
+	$orders = $response->orders;
+	include('market.tpl.php');  
+	break;
 
-$data = json_decode($HTTP_RAW_POST_DATA);
-if ($data === NULL) { $api->error_400($db); }  // If no data recieved - blame yandex.
-$output = $api->POST_OrderAccept($db,$data);
-if ($output) $api->ok_200($output); else $api->error_500($db);
-break;
+    case '':
+        break;
 
-case 'order/status':
-$api->validate_auth();  // validating Authorization token in headers
-
-// $test_data = '{"order":{"id":4817,"fake":true,"currency":"RUR","paymentType":"POSTPAID","paymentMethod":"CASH_ON_DELIVERY","status":"PROCESSING","creationDate":"26-11-2013 13:35:11","itemsTotal":57060,"total":57310,"delivery":{"type":"DELIVERY","price":250,"serviceName":"Собственная служба доставки","dates":{"fromDate":"27-11-2013","toDate":"27-11-2013"},"region":{"id":213,"name":"Москва","type":"CITY","parent":{"id":1,"name":"Москва и Московская область","type":"SUBJECT_FEDERATION","parent":{"id":3,"name":"Центр","type":"COUNTRY_DISTRICT","parent":{"id":225,"name":"Россия","type":"COUNTRY"}}}},"address":{"country":"Россия","city":"Москва","subway":"авиамоторная","street":"тестовая улица","house":"1","block":"2","entrance":"2","entryphone":"4","floor":"5","apartment":"3","recipient":"Тестовый Пацанчик","phone":"1234567"}},"buyer":{"id":"w4lBNsr2bC8=","lastName":"Кулешова","firstName":"Алина","phone":"1234567","email":"babalina@yandex.ru"},"items":[{"feedId":9997,"offerId":"5695","feedCategoryId":"160","offerName":"Графический планшет WACOM Intuos5 Pro L [PTH-851-RU]","price":20560,"count":1},{"feedId":9997,"offerId":"2770","feedCategoryId":"56","offerName":"Моноблок MSI Wind Top AE2712G-027 (Core i5 3470S 2900 Mhz/27\"/1920x1080/4096Mb/1000Gb/BlueRay/Wi-Fi/Bluetooth/Win 8 ... ","price":36500,"count":1}],"notes":"примечание"}}';
-// $data = json_decode($test_data);
-
-
-$data = json_decode($HTTP_RAW_POST_DATA);
-if ($data === NULL) { $api->error_400($db); }  // If no data recieved - blame yandex.
-if ($output = $api->POST_OrderStatus($db,$data)) $api->ok_200(""); else $api->error_500($db);
-
-break;
-
-case 'orders':
-$response = json_decode($api->GET_Orders());
-$orders = $response->orders;
-include('market.tpl.php');
-
-break;
-
-case '':
-break;
-
-default:
-// If method is not recognized - blame yandex.
-
-$api->error_400($db);
-break;
-
+    default:
+        // If method is not recognized - blame yandex.
+        $api->error_400($db);
+        break;
 }
 
 $db->close();
