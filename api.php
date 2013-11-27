@@ -247,11 +247,7 @@ class Market_API_v2 {
 
 	$put_json = array("order"=> array("status" => $status));
 	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders/'.$id.'/status.json';
-	$fp = fopen('/var/www-ssl/put.log','a+');
-	fwrite($fp, $url);
 	$res = $this->curl_oauth_exec($url, true, json_encode($put_json,JSON_UNESCAPED_UNICODE)); 
-	fwrite($fp,$res);
-	fclose($fp);
 	
 	if ($body = json_decode($res)) {
 	$db->setStatus($id, $status, $body);
