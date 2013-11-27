@@ -102,14 +102,14 @@ $total += $item->price * $item->count;
 <dl class="dl-horizontal">
 	<dt>Статус заказа</dt>
 	<dd>
-		<select id="#order_<?=$order->id?>_status" disabled="disabled">
+		<select id="order_<?=$order->id?>_status" disabled="disabled">
   <option>132132</option>
   <option>2</option>
   <option>3</option>
   <option>4</option>
   <option>5</option>
 </select>
-<button onclick="$('#order_<?=$order->id?>_status').removeAttr('disabled');">Изменить...</button>
+<button class="btn btn-primary btn-xs" onclick="$('#order_<?=$order->id?>_status').removeAttr('disabled'); $(this).attr('class', 'btn btn-danger btn-xs'); this.innerText = 'Сохранить';">Изменить...</button>
 
 	</dd>
 </dl>
