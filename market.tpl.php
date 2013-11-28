@@ -31,7 +31,7 @@
 			}
 			.word-wrapped {
 			     word-wrap: break-word;
-			    word-break: break-all;
+           word-break: break-all;
 			}
 		</style>
 	</head>
@@ -52,14 +52,14 @@
 						<th></th>
 					</tr>
 <?php
-foreach ($orders as $order) {
+  foreach ($orders as $order) {
     $status = $api->STATUS[$order->status][0];
     $transitions = false;
     if (isset($api->TRANSITIONS[$order->status])) {
         $transitions = array();
-	foreach ($api->TRANSITIONS[$order->status] as $transition) {
-	$transitions[$transition] = $api->STATUS[$transition];
-	}
+	      foreach ($api->TRANSITIONS[$order->status] as $transition) {
+	        $transitions[$transition] = $api->STATUS[$transition];
+	      }
     }
     if (trim($order->substatus) != '') $title = "title=\"".$api->SUBSTATUS[$order->substatus][0]."\""; else $title = '';
     $total = 0;
@@ -80,39 +80,38 @@ foreach ($orders as $order) {
 	    <div class="modal fade" id="order_<?=$order->id?>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="modal-dialog">
 		    <div class="modal-content">
-			<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-			<h4 class="modal-title" id="myModalLabel">Заказ <?=$order->id?> от <?=$order->creationDate?></h4>
-		    </div>
-		    <div class="modal-body">
+			    <div class="modal-header">
+			      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			      <h4 class="modal-title" id="myModalLabel">Заказ <?=$order->id?> от <?=$order->creationDate?></h4>
+		      </div>
+		      <div class="modal-body">
+            <table class="table">
+	            <tr class="row">
+		            <td class="col-md-6">
+                  <div class="panel panel-default">
+                  <div class="panel-heading text-center"><h3 class="panel-title"><strong>Информация о покупателе</strong></h3></div>
+                  <div class="panel-body">
+                    <?if (isset($order->buyer)):?>
+                      <dl class="dl-horizontal">
+	                  <?php
+	                    foreach ($order->buyer as $k => $v) {
+	                      if ((isset($api->BUYER[$k])) and ($v != '')) { ?>
+	                        <dt><?=$api->BUYER[$k];?></dt><dd><?=$v;?></dd>
+                  	<?php } 
+                      } ?>
+                      </dl>
+                    <?endif;?>
+                  </div>
+                  </div>
 
-<table class="table">
-	<tr class="row">
-		<td class="col-md-6">
-<div class="panel panel-default">
-  <div class="panel-heading text-center"><h3 class="panel-title"><strong>Информация о покупателе</strong></h3></div>
-  <div class="panel-body">
-    <?if (isset($order->buyer)):?>
-<dl class="dl-horizontal">
-	<?php
-	foreach ($order->buyer as $k => $v) {
-
-	if ((isset($api->BUYER[$k])) and ($v != '')) { ?>
-	<dt><?=$api->BUYER[$k];?></dt><dd><?=$v;?></dd>
-	<?php } } ?>
-</dl>
-<?endif;?>
-  </div>
-</div>
-
-<div class="panel panel-default">
-  <div class="panel-heading text-center"><h3 class="panel-title"><strong>Информация о заказе</strong></h3></div>
-  <div class="panel-body">
-<dl class="dl-horizontal">
-	<dt>Статус заказа:</dt>
-	<dd>
-	<form method="POST" action="<?=$baseurl."/put/status"?>">
-	<input type="hidden" name="order_id" value="<?=$order->id?>" />
+                <div class="panel panel-default">
+                  <div class="panel-heading text-center"><h3 class="panel-title"><strong>Информация о заказе</strong></h3></div>
+                  <div class="panel-body">
+                    <dl class="dl-horizontal">
+	                    <dt>Статус заказа:</dt>
+	                      <dd>
+	                        <form method="POST" action="<?=$baseurl."/put/status"?>">
+	                          <input type="hidden" name="order_id" value="<?=$order->id?>" />
 	<select onchange=" 
 	    if ($(this).val()=='CANCELLED') 
 		{$('#substatus').css('visibility','visible');}
@@ -126,15 +125,14 @@ foreach ($orders as $order) {
 	    <option value="<?=$key?>"><?=$possible_status[0];?></option>
 	<?php } ?>
 	</select>
-	<select  id="substatus" name="substatus" style="visibility:hidden;">
+	
+  <select  id="substatus" name="substatus" style="visibility:hidden;">
 	    <?php
-	    foreach ($api->SUBSTATUS_CHOICES[$order->status] as $key) {
-	    ?>
-	    <option value="<?=$key?>"><?=$api->SUBSTATUS[$key][1];?></option>
-	    <?php
-	    }
-	    ?>
+	    foreach ($api->SUBSTATUS_CHOICES[$order->status] as $key) {  ?>
+	      <option value="<?=$key?>"><?=$api->SUBSTATUS[$key][1];?></option>
+	    <?php  }  ?>
 	</select>
+
 	<button
 	    class="btn btn-primary btn-xs"
 	    onclick="
@@ -145,9 +143,7 @@ foreach ($orders as $order) {
 		return false;">
 	    Изменить...
 	</button>
-	<?php
-	}
-	?>
+	<?php 	} /* end of if transitions */ 	?>
 	</form>
 	</dd>
 </dl>
@@ -230,7 +226,7 @@ foreach ($order->items as $item) {
 
 					</tr>
 <?php
-}
+}  // End of foreach orders as order
 ?>
 				</table>
 			</article>
