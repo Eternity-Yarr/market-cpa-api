@@ -15,7 +15,12 @@ include('dbo.class.php');
 // Bitrix implementation of abstract class dbo
 include('bitrix.class.php');
 
+include('api.lang.php'); 
+// Translation trait
+
 class Market_API_v2 {
+
+    use Market_API_v2_russian;
 
     private $baseurl = 'https://api.partner.market.yandex.ru/v2/';
 
@@ -52,68 +57,6 @@ class Market_API_v2 {
 
     }
 
-// statuses
-
-    public $DELIVERY = array ( 'DELIVERY' => 'Доставка' , 'PICKUP' => 'Самовывоз' );
-
-    public $PAYMENTS = array ( 'CASH_ON_DELIVERY' => 'Курьеру', 'SHOP_PREPAID' => 'Предоплата' );
-
-    public $STATUS = array(
-    
-  'RESERVED' => 
-    array(	'Заказ зарезервирован',
-		'В резерве'),
-  'PROCESSING' => 
-    array(	'Заказ находится в обработке',
-		'В обработке'),
-  'DELIVERY'  =>
-    array(	'Заказ передан в доставку',
-		'В доставке'),
-  'PICKUP' =>
-    array(	'Заказ доставлен в пункт самовывоза',
-		'В самовывозе'),
-  'DELIVERED' =>
-    array(	'Заказ получен покупателем',
-		'Доставлен'),
-  'CANCELLED' => 
-    array(	'Заказ отменен',
-		'Отменен'));
-
-// substatuses
-
-    public $SUBSTATUS = array(
-
-  'RESERVATION_EXPIRED' =>
-    array(	'Покупатель не завершил оформление зарезервированного заказа вовремя',
-		'Резерв снят'),
-  'USER_NOT_PAID' =>
-    array(	'Покупатель не оплатил заказа',
-		'Не оплачен'),
-  'USER_UNREACHABLE' =>
-    array(	'Не удалось связаться с покупателем',
-		'Не доступен'),
-  'USER_CHANGED_MIND' =>
-    array(	'Покупатель отменил заказ по собственным причинам',
-		'Передумал'),
-  'USER_REFUSED_DELIVERY' =>
-    array(	'Покупателя не устраивают условия доставки',
-		'Доставка не устраивает'),
-  'USER_REFUSED_PRODUCT' =>
-    array(	'Покупателю не подошел товар',
-		'Товар не устраивает'),
-  'USER_REFUSED_QUALITY' =>
-    array(	'Покупателя не устраивает качество товара',
-		'Качество низкое'),
-  'SHOP_FAILED' =>
-    array(	'Магазин не может выполнить заказ',
-		'Магазин отказался'),
-  'REPLACING_ORDER' =>
-    array(	'Покупатель изменяет состав заказа',
-		'Замена заказа'),
-  'PROCESSING_EXPIRED' =>
-    array(	'Магазин не обработал заказ вовремя',
-		'Не успели обработать'));
-
     // Possible transitions:
 
     public $TRANSITIONS = array(
@@ -128,27 +71,6 @@ class Market_API_v2 {
     'DELIVERY' 	 => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'USER_REFUSED_QUALITY', 'SHOP_FAILED'),
     'PICKUP'  	 => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'USER_REFUSED_QUALITY', 'SHOP_FAILED'));
 
-    public $BUYER = array(
-    'firstName'	=> 'Имя покупателя',
-    'phone'		=> 'Номер телефона',
-    'email'		=> 'Электронная почта',
-    'lastName'		=> 'Фамилия покупателя',
-    'middleName'	=> 'Отчество покупателя');
-
-    public $ADDRESS = array(
-    'country'		=> 'Страна',
-    'city'		=> 'Город/село',
-    'house'		=> 'Номер дома',
-    'postcode'		=> 'Почтовый индекс',
-    'street'		=> 'Улица',
-    'subway'		=> 'Метро',
-    'block'		=> 'Корпус',
-    'entrance'		=> 'Подъезд',
-    'entryphone'	=> 'Домофон',
-    'floor'		=> 'Этаж',
-    'apartment'		=> 'Квартира',
-    'recipient'		=> 'ФИО получателя',
-    'phone'		=> 'Телефон получателя');
 
     private function curl_oauth_exec($url, $put=false, $put_json=false) {
 
