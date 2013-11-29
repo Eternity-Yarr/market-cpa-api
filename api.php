@@ -11,6 +11,7 @@ include('config.inc.php');  // Organization specific stuff
 include('dbconn.php');  // Host specific thingies
 
 include('dbo.class.php');
+include('ems.class.php');
 
 // Bitrix implementation of abstract class dbo
 include('bitrix.class.php');
@@ -108,24 +109,8 @@ class Market_API_v2 {
 	$grand_total = 0;
 	$delivery_price = $this->std_delivery;
 	$expensive_groups = $db->getExpensiveGroups();
-	foreach ($data->cart->items as $item) {
-
-	    if ($stock = $db->inStock($item->offerId)) $delivery = true; else $delivery = false;
-	    $outlets = array_intersect($outlets, $stock);
-	    if (!in_array($item->feedCategoryId, $expensive_groups)) { $delivery_price = $this->special_delivery; }
-	    if ($price = $db->getPrice($item->offerId)) {
-		$grand_total += $item->count * $price;
-		$res['cart']['items'][] =
-		    array(	'feedId'	=> $item->feedId,
-				'offerId'	=> $item->offerId,
-				'price'		=> (int)$price,
-				'count'		=> $item->count,
-				'delivery'	=> $delivery );
-	    }
-	    else error_500($db);
-
-	}
-//	if ($data->delivery->region->id == 213)   {     // Moscow city 
+	$city_not_found = false;
+	if ($data->cart->delivery->region->id == 213)   {     // Moscow city 
 	if (count($outlets)>0) {
 	    $outlets_list = array();
 	    foreach ($outlets as $outlet) {
@@ -147,15 +132,68 @@ class Market_API_v2 {
 		'serviceName' => 'Собственная служба доставки',
 		'price' => $delivery_price,
 		'dates' => array ('fromDate' => date('d-m-Y', time() + 24*60*60))); 		//  Hardcoded for "tomorrow"
-/*    } else {
+    } else {
+    $ems = new EMSDelivery();
+    $ems_regions = $ems->emsGetLocations(EMS::emsRussia);
+    if (is_object($data->cart->delivery->region->parent)) $sub = $data->cart->delivery->region->parent;
+    while ($sub) {
+    $upper = mb_convert_case($sub->name, MB_CASE_UPPER, "UTF-8");
 
+    if (isset($ems_regions[$upper])) {
+	$dest = $ems_regions[$upper]; 
+	}
+    $sub = is_object($sub->parent) ? $sub->parent : false;
+	
+    }
+
+    $res['cart']['paymentMethods'] = $this->paymentMethods[1];
+    $terms = $ems->emsCalculate($dest,5);
+    
+    if ($terms) 
+	{ $price = round($terms['price']);
+	  $eta_min = $terms['min'];
+	  $eta_max = $terms['max'];
+        $res['cart']['deliveryOptions'][] = array(
+	    'type' => 'POST',
+	    'serviceName' => 'EMS Почта России',
+	    'price' => $price,
+	    'dates' => array('fromDate' => date('d-m-Y', time() + $eta_min*24*60*60),'toDate' => date('d-m-Y', time() + $eta_max*24*60*60)));
+    } else {
+    unset($res['cart']['deliveryOptions']);
+    $city_not_found = true;
     $res['cart']['deliveryOptions'][] = array(
-	'type' => 'POST',
-	'serviceName' => 'EMS Почта России',
-	'price' => ,
-	'dates' => array('fromDate' => date('d-m-Y', time() + 14*24*60*60))
-	);
-    } */
+		'type'		=> 'PICKUP',
+		'serviceName'   => 'Самовывоз',
+		'price'		=> 0,
+		'dates'		=> array ( 'fromDate' => date('d-m-Y', time()),'toDate' => date('d-m-Y', time()+24*60*60)),
+		'outlets'	=> array(array('id' => array_values($db->outlets)[0])));
+
+
+     }
+    
+    
+    
+    } 
+
+    foreach ($data->cart->items as $item) {
+
+	    if (($stock = $db->inStock($item->offerId)) and (!$city_not_found)) $delivery = true; else $delivery = false;
+	    $outlets = array_intersect($outlets, $stock);
+	    if (!in_array($item->feedCategoryId, $expensive_groups)) { $delivery_price = $this->special_delivery; }
+	    if ($price = $db->getPrice($item->offerId)) {
+		$grand_total += $item->count * $price;
+		$res['cart']['items'][] =
+		    array(	'feedId'	=> $item->feedId,
+				'offerId'	=> $item->offerId,
+				'price'		=> (int)$price,
+				'count'		=> $item->count,
+				'delivery'	=> $delivery );
+	    }
+	    else error_500($db);
+
+	}
+
+
 	return $res;
     }
 

@@ -4,7 +4,7 @@ trait Market_API_v2_russian {
 
 // statuses
 
-    public $DELIVERY = array ( 'DELIVERY' => 'Доставка' , 'PICKUP' => 'Самовывоз' );
+    public $DELIVERY = array ( 'DELIVERY' => 'Доставка' , 'PICKUP' => 'Самовывоз', 'POST' => 'EMS' );
 
     public $PAYMENTS = array ( 'CASH_ON_DELIVERY' => 'Курьеру', 'SHOP_PREPAID' => 'Предоплата' );
 

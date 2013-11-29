@@ -41,7 +41,7 @@ class EMSDelivery extends EMS {
 	if (($res = json_decode($json)) AND (isset($res->rsp->locations))) {
 	    $locations = array();
 	    foreach ($res->rsp->locations as $element) {
-		$locations[$element->value] = $element->name;
+		$locations[$element->name] = $element->value;
 		}
 	    } else return false;
 	return $locations;
@@ -61,11 +61,13 @@ class EMSDelivery extends EMS {
     }
 
     public function emsCalculate($dest,$weight) {
-
+    
     $from = 'city--moskva';  			// HARDCODED from Moscow
-    $json = $this->httpRequest(sprintf(EMS::$baseurl.'method=ems.calculate&from=%s&to=%s&weight=%f',$from,$dest,$weight));
+    $url = sprintf(EMS::$baseurl.'method=ems.calculate&from=%s&to=%s&weight=%f',$from,$dest,$weight);
+    $json = $this->httpRequest($url);
+    
     if (($res = json_decode($json)) and (isset($res->rsp->price))) {
-	    return array($res->rsp->price,$res->rsp->term);
+	    return array('price' => $res->rsp->price,'min'=>$res->rsp->term->min, 'max'=> $res->rsp->term->max);
 	}
     else return false;
 

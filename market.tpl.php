@@ -113,13 +113,13 @@
                     <dl class="dl-horizontal">
 	                    <dt>Статус заказа:</dt>
 	                      <dd>
-	                        <form method="POST" action="<?=$baseurl."/put/status"?>">
+	                        <form  method="POST" action="<?=$baseurl."/put/status"?>">
 	                          <input type="hidden" name="order_id" value="<?=$order->id?>" />
 	<select onchange=" 
 	    if ($(this).val()=='CANCELLED') 
-		{$('#substatus').css('visibility','visible');}
+		{$('form select[name=substatus]').css('visibility','visible');}
 	    else
-		{$('#substatus').css('visibility','hidden');} " name="new_status" id="order_<?=$order->id?>_status" disabled="disabled">
+		{$('form select[name=substatus]').css('visibility','hidden');} " name="new_status" id="order_<?=$order->id?>_status" disabled="disabled">
 	<option value="<?=$order->status?>" selected><?=$api->STATUS[$order->status][0];?></option>
 	<?php
 	if ($transitions) { ?>
@@ -129,7 +129,7 @@
 	<?php } ?>
 	</select>
 	
-  <select  id="substatus" name="substatus" style="visibility:hidden;">
+  <select class="substatus" name="substatus" style="visibility:hidden;">
 	    <?php
 	    foreach ($api->SUBSTATUS_CHOICES[$order->status] as $key) {  ?>
 	      <option value="<?=$key?>"><?=$api->SUBSTATUS[$key][1];?></option>
@@ -159,7 +159,9 @@
 <td class="col-md-6">
 
 <?switch ($order->delivery->type):
-case 'DELIVERY':?>
+case 'DELIVERY':
+case 'POST':
+?>
 
 <div class="panel panel-default">
   <div class="panel-heading">
