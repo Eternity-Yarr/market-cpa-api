@@ -125,6 +125,7 @@ class Market_API_v2 {
 	    else error_500($db);
 
 	}
+//	if ($data->delivery->region->id == 213)   {     // Moscow city 
 	if (count($outlets)>0) {
 	    $outlets_list = array();
 	    foreach ($outlets as $outlet) {
@@ -146,7 +147,15 @@ class Market_API_v2 {
 		'serviceName' => 'Собственная служба доставки',
 		'price' => $delivery_price,
 		'dates' => array ('fromDate' => date('d-m-Y', time() + 24*60*60))); 		//  Hardcoded for "tomorrow"
+/*    } else {
 
+    $res['cart']['deliveryOptions'][] = array(
+	'type' => 'POST',
+	'serviceName' => 'EMS Почта России',
+	'price' => ,
+	'dates' => array('fromDate' => date('d-m-Y', time() + 14*24*60*60))
+	);
+    } */
 	return $res;
     }
 
