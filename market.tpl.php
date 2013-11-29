@@ -30,8 +30,11 @@
 				width: 900px;
 			}
 			.word-wrapped {
-			     word-wrap: break-word;
-           word-break: break-all;
+			    word-wrap: break-word;
+        		    word-break: break-all;
+			}
+			.dl-horizontal {
+			    margin-bottom: 0.5em;
 			}
 		</style>
 	</head>
@@ -66,7 +69,7 @@
     $payment = (isset($api->PAYMENTS[$order->paymentMethod])) ? $api->PAYMENTS[$order->paymentMethod] : 'Не указана';
     foreach ($order->items as $item) {   $total += $item->price * $item->count; }
 ?>
-					<tr>
+					<tr class="<?=$api->STATUS[$order->status][2];?>">
 						<td><?=$order->id?></td>
 						<td><?=$order->creationDate?></td>
 						<td <?=$title?>><?=$status?></td>
