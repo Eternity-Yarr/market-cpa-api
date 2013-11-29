@@ -10,13 +10,13 @@
 include('config.inc.php');  // Organization specific stuff
 include('dbconn.php');  // Host specific thingies
 
-include('dbo.class.php');
-include('ems.class.php');
+include('classes/dbo.class.php');
+include('classes/ems.class.php');
 
 // Bitrix implementation of abstract class dbo
-include('bitrix.class.php');
+include('classes/bitrix.class.php');
 
-include('api.lang.php'); 
+include('lang/api.lang.php'); 
 // Translation trait
 
 class Market_API_v2 {

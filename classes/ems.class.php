@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * EMS-api dealer-with
+ * v. 0.2 | https://github.com/Eternity-Yarr/market-cpa-api/
+ *
+ * CC0 1.0 license.
+ */
+
 class EMS {
 
     static protected $baseurl = 'http://emspost.ru/api/rest/?';
