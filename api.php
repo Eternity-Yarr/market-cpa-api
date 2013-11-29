@@ -147,7 +147,10 @@ class Market_API_v2 {
     }
 
     $res['cart']['paymentMethods'] = $this->paymentMethods[1];
-    $terms = $ems->emsCalculate($dest,5);
+    $weight = 0;
+    foreach ($data->cart->items as $item) { $weight += $db->getWeight($item->offerId)*$item->count; }
+
+    if ($weight > $ems->emsGetMaxWeight()) $terms = false; else  $terms = $ems->emsCalculate($dest,$weight);
     
     if ($terms) 
 	{ $price = round($terms['price']);

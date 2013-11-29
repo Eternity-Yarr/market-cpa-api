@@ -56,7 +56,7 @@ class EMSDelivery extends EMS {
 
     public function emsGetMaxWeight() {
     
-	$json = $this->httpRequest(EMS::$baseurl.'method=ems.test.echo');
+	$json = $this->httpRequest(EMS::$baseurl.'method=ems.get.max.weight');
     
         if (($res = json_decode($json)) and (isset($res->rsp->max_weight))) {
 	

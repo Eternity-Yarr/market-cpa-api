@@ -24,6 +24,7 @@ abstract class dbo extends mysqli {
     }
 
     abstract public function inStock($id);   		// Returns array of outlet ids with $id in stock.
+    abstract public function getWeight($id);		// Retruns weight of product
     abstract public function getPrice($id);  		// Returns actual price for $id
     abstract public function getOrderStatus($id); 	// Returns status of order $id, if order is present. Returns false otherwise.
     abstract public function addOrder($id,$body, $initial_status, $fake = false); // Add new order to DB, return true on success, false - on errors
