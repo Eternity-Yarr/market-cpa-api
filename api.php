@@ -42,7 +42,7 @@ class Market_API_v2 {
     private $payment_threshold = 90000;
 
     // Delivery prices. We assume that customer buys items w expensive delivery, 500 RUR.
-    private $std_delivery = 500;
+    private $std_delivery = 250;
     // If there's any items are present in cart, that delivered w special price - falling back to this option;
     private $special_delivery = 250;
 
@@ -106,6 +106,13 @@ class Market_API_v2 {
 	// Proper response structure
 	$res = array('cart' => array('items' => array(), 'deliveryOptions' => array(), 'paymentMethods' => array()));
 	$outlets = $db->outlets;
+	foreach ($data->cart->items as $item) { 
+	    $xs= $db->inStock($item->offerId);
+	    foreach($outlets as $x) {
+		if (!in_array($x,$xs)) unset($outlets[array_search($x,$outlets)]);
+	    }
+	}
+	
 	$grand_total = 0;
 	$delivery_price = $this->std_delivery;
 	$expensive_groups = $db->getExpensiveGroups();
@@ -285,10 +292,14 @@ class Market_API_v2 {
     }
 
 
-    function GET_Orders()  {
+    function GET_Orders($debug = false)  {
 
 	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders.json';
 	$ret = $this->curl_oauth_exec($url);
+	if ($debug) {
+	$fp = fopen('/var/www-ssl/test.log','a+');
+	fwrite($fp,print_r($ret,1));
+	fclose($fp);}
 	return $ret;
     }
 
