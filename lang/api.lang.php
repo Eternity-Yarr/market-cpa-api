@@ -6,10 +6,13 @@ trait Market_API_v2_russian {
 
     public $DELIVERY = array ( 'DELIVERY' => 'Доставка' , 'PICKUP' => 'Самовывоз', 'POST' => 'EMS' );
 
-    public $PAYMENTS = array ( 'CASH_ON_DELIVERY' => 'Курьеру', 'SHOP_PREPAID' => 'Предоплата' );
+    public $PAYMENTS = array ( 'CASH_ON_DELIVERY' => 'Курьеру', 'SHOP_PREPAID' => 'Предоплата', 'YANDEX' => 'Предоплата Яндексу');
 
     public $STATUS = array(
-    
+  'UNPAID'   =>
+    array(	'Оформлен, нет оплаты',
+		'Не оплачен',
+		'danger'),
   'RESERVED' => 
     array(	'Заказ зарезервирован',
 		'В резерве',

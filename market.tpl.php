@@ -64,16 +64,16 @@
 	        $transitions[$transition] = $api->STATUS[$transition];
 	      }
     }
-    if (trim($order->substatus) != '') $title = "title=\"".$api->SUBSTATUS[$order->substatus][0]."\""; else $title = '';
+    if ((isset($order->substatus)) and (trim($order->substatus) != '')) $title = "title=\"".$api->SUBSTATUS[$order->substatus][0]."\""; else $title = '';
     $total = 0;
-    $payment = (isset($api->PAYMENTS[$order->paymentMethod])) ? $api->PAYMENTS[$order->paymentMethod] : 'Не указана';
+    $payment = ((isset($order->paymentMethod)) and (isset($api->PAYMENTS[$order->paymentMethod]))) ? $api->PAYMENTS[$order->paymentMethod] : 'Не указана';
     foreach ($order->items as $item) {   $total += $item->price * $item->count; }
 ?>
 					<tr class="<?=$api->STATUS[$order->status][2];?>">
 						<td><?=$order->id?></td>
 						<td><?=$order->creationDate?></td>
 						<td <?=$title?>><?=$status?></td>
-						<td class="text-right"><?=number_format($total, 0, ',', ' ');?>&nbsp;руб.</td>
+						<td class="text-right"><?=number_format($total, 0, ',', '&nbsp;');?>&nbsp;руб.</td>
 						<td><?=$api->DELIVERY[$order->delivery->type]?></td>
 						<td><?=$payment?></td>
 						<td>
@@ -86,7 +86,7 @@
 			    <div class="modal-header">
 			      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 			      <h4 class="modal-title" id="myModalLabel">Заказ <?=$order->id?> от <?=$order->creationDate?></h4>
-			      <p><?=$order->notes;?></p>
+			      <p><?=isset($order->notes)?$order->notes:"";?></p>
 		      </div>
 		      <div class="modal-body">
             <table class="table">

@@ -36,15 +36,16 @@ class Market_API_v2 {
     private $initial_status = 'PROCESSING';
 
     // hardcoded payment methods for current implementation
-    private $paymentMethods = array(array("CASH_ON_DELIVERY", "SHOP_PREPAID"), array("SHOP_PREPAID"));
+    private $paymentMethods = array(array("CASH_ON_DELIVERY", "SHOP_PREPAID", "YANDEX"), array("SHOP_PREPAID", "YANDEX"));
 
     // limit cash_on_delivery method for orders with total price less than this threshold
     private $payment_threshold = 90000;
 
     // Delivery prices. We assume that customer buys items w expensive delivery, 500 RUR.
-    private $std_delivery = 250;
+    private $std_delivery = 190;
     // If there's any items are present in cart, that delivered w special price - falling back to this option;
-    private $special_delivery = 250;
+    private $special_delivery = 190;
+    private $expensive_delivery = 190;
 
 
     function __construct($key, $secret, $token, $campaignId, $login, $auth) {
@@ -94,6 +95,28 @@ class Market_API_v2 {
 	return curl_exec($ch);
     }
 
+    function error_400($db=false){
+
+	header('HTTP/1.0 400 Bad Request');
+	if ($db) $db->close();
+	exit();
+    }
+
+
+    function error_500($db=false){
+
+	header('HTTP/1.0 500 Internal Server Error');
+	if ($db) $db->close();
+	exit();
+    }
+
+
+    function ok_200($output){
+
+	header("HTTP/1.1 200 OK \r\n");
+        header("Content-Type: application/json;charset=utf-8\r\n");
+        echo (json_encode($output,JSON_UNESCAPED_UNICODE));
+    }
 
     function POST_Cart($db, $data){
 
@@ -114,6 +137,12 @@ class Market_API_v2 {
 	}
 	
 	$grand_total = 0;
+        foreach ($data->cart->items as $item) {
+	    if ($price = $db->getPrice($item->offerId)) {
+		$grand_total += $item->count * $price;
+	    }
+	}
+
 	$delivery_price = $this->std_delivery;
 	$expensive_groups = $db->getExpensiveGroups();
 	$city_not_found = false;
@@ -130,15 +159,17 @@ class Market_API_v2 {
 		'dates'		=> array ( 'fromDate' => date('d-m-Y', time()),'toDate' => date('d-m-Y', time()+24*60*60)),
 		'outlets'	=> $outlets_list );
 	}
-	if ($grand_total < $this->payment_threshold) {
+	if ($grand_total < $this->payment_threshold) 
+	{
 	    $res['cart']['paymentMethods'] = $this->paymentMethods[0];
-	} else  {
-	    $res['cart']['paymentMethods'] = $this->paymentMethods[1];}
+	} 
+	else  {$res['cart']['paymentMethods'] = $this->paymentMethods[1];}
 	    $res['cart']['deliveryOptions'][] = array(
 		'type' => 'DELIVERY',
 		'serviceName' => 'Собственная служба доставки',
-		'price' => $delivery_price,
+		'price' => $grand_total < 5000 ? 190 : $delivery_price,
 		'dates' => array ('fromDate' => date('d-m-Y', time() + 24*60*60))); 		//  Hardcoded for "tomorrow"
+
     } else {
     $ems = new EMSDelivery();
     $ems_regions = $ems->emsGetLocations(EMS::emsRussia);
@@ -296,10 +327,6 @@ class Market_API_v2 {
 
 	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders.json';
 	$ret = $this->curl_oauth_exec($url);
-	if ($debug) {
-	$fp = fopen('/var/www-ssl/test.log','a+');
-	fwrite($fp,print_r($ret,1));
-	fclose($fp);}
 	return $ret;
     }
 
@@ -311,28 +338,6 @@ class Market_API_v2 {
 	return $ret;
     }
 
-    function error_400($db=false){
-
-	header('HTTP/1.0 400 Bad Request');
-	if ($db) $db->close();
-	exit();
-    }
-
-
-    function error_500($db=false){
-
-	header('HTTP/1.0 500 Internal Server Error');
-	if ($db) $db->close();
-	exit();
-    }
-
-
-    function ok_200($output){
-
-	header("HTTP/1.1 200 OK \r\n");
-        header("Content-Type: application/json;charset=utf-8\r\n");
-        echo (json_encode($output,JSON_UNESCAPED_UNICODE));
-    }
 
 
     function ni_501($db){
@@ -395,9 +400,14 @@ switch ($route) {
 	break;
 
     case 'orders':
-	$response = json_decode($api->GET_Orders());
+	$str = $api->GET_Orders();
+	$response = json_decode($str);
+	if ($response)  {
 	$orders = $response->orders;
 	include('market.tpl.php');
+	} else {
+	 trigger_error("No can parse response:".$str, E_USER_ERROR);
+	}
 	break;
 
     case 'put/status':
