@@ -46,6 +46,7 @@ class Market_API_v2 {
     // If there's any items are present in cart, that delivered w special price - falling back to this option;
     private $special_delivery = 190;
     private $expensive_delivery = 190;
+    public $page = 1;
 
 
     function __construct($key, $secret, $token, $campaignId, $login, $auth) {
@@ -325,7 +326,7 @@ class Market_API_v2 {
 
     function GET_Orders($debug = false)  {
 
-	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders.json';
+	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders.json?pageSize=50&page='.$this->page;
 	$ret = $this->curl_oauth_exec($url);
 	return $ret;
     }
@@ -373,6 +374,11 @@ $api = new Market_API_v2($cc_key, $cc_secret, $token, $campaignId, $login, $auth
 $db = new dbo_bitrix($DBLogin,$DBPassword, $DBName);
 
 $route = isset($_GET['route']) ? $_GET['route'] : '';
+if (strpos($route,"/page/"))
+{
+    $api->page = (int)substr($route,strpos($route,"/page/")+6);
+    $route = substr($route,0,strpos($route,"/page"));
+}
 
 switch ($route) {
 

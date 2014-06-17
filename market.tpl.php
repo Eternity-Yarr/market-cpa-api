@@ -40,7 +40,17 @@
 	</head>
 	<body>
 		<header class="container">
-			<h1 class="col-md-10 col-md-offset-1">«Покупка на Маркете»</h1>
+			<h1 class="col-md-7 col-md-offset-1">«Покупка на Маркете»</h1>
+			<div class="col-md-2">
+			<h2>
+			Стр:
+			<a href="<?=$baseurl?>/orders/page/1">1</a>
+			<a href="<?=$baseurl?>/orders/page/2">2</a>
+			<a href="<?=$baseurl?>/orders/page/3">3</a>
+			<a href="<?=$baseurl?>/orders/page/4">4</a>
+			</h2>
+			</div>
+
 		</header>
 		<section class="container">
 			<article class="col-md-10 col-md-offset-1">
