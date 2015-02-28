@@ -19,9 +19,21 @@ include('classes/bitrix.class.php');
 include('lang/api.lang.php'); 
 // Translation trait
 
-class Market_API_v2 {
 
+spl_autoload_register(function ($class) {
+    include './classes/geo/' . $class . '.class.php';
+});
+
+// Bounding polygon for geocoding of delivery zone
+// extracted from yandex maps with this call : ymaps.map.instance.geoObjects.each(function(data){console.log(JSON.stringify(data.geometry.getCoordinates()))});
+$poly = "[[37.53802012109376,55.95921043024463],[37.665736185546876,55.94842376358383],[37.804438578125,55.88827135321109],[37.93902109765624,55.787808910221806],[37.94863413476557,55.71733001256884],[37.91155527734376,55.66458094292555],[37.91155527734376,55.640509849291334],[37.79070566796875,55.54952692367767],[37.698695169921876,55.529279714598566],[37.60805796289062,55.515256281541234],[37.45424936914061,55.56353808917801],[37.38421152734375,55.614869448085756],[37.33202646874999,55.69484282632032],[37.321040140625,55.75607051048049],[37.33065317773436,55.80250815028393],[37.35811899804687,55.858932367240634],[37.415797220703126,55.91450315891147],[37.48583506249999,55.94996490075033],[37.53802012109376,55.95921043024463]]";
+$polygon = new Polygon($poly);
+$geoCoder = new GeoCode();
+
+
+class Market_API_v2 {
     use Market_API_v2_russian;
+
 
     private $baseurl = 'https://api.partner.market.yandex.ru/v2/';
 
@@ -116,7 +128,9 @@ class Market_API_v2 {
 
 	header("HTTP/1.1 200 OK \r\n");
         header("Content-Type: application/json;charset=utf-8\r\n");
-        echo (json_encode($output,JSON_UNESCAPED_UNICODE));
+	$encoded = json_encode($output,JSON_UNESCAPED_UNICODE);
+	file_put_contents('/tmp/cpa.log', "OUTBOUND --- ".date(DATE_RFC2822).PHP_EOL.$encoded.PHP_EOL.PHP_EOL, FILE_APPEND);
+        echo ($encoded);
     }
 
     function POST_Cart($db, $data){
@@ -127,11 +141,18 @@ class Market_API_v2 {
     //  returns well formed array, for further json_encode and ouput
     //  or HTTP 500 error
 
+    //FIXME: dependency!
+    global $geoCoder;
+    global $polygon;
+
+
 	// Proper response structure
 	$res = array('cart' => array('items' => array(), 'deliveryOptions' => array(), 'paymentMethods' => array()));
 	$outlets = $db->outlets;
+	$delivery_flag = true;
 	foreach ($data->cart->items as $item) { 
-	    $xs= $db->inStock($item->offerId);
+	    $xs= $db->inStockForDelivery($item->offerId);
+	    $delivery_flag = $delivery_flag && $db->inStock($item->offerId);
 	    foreach($outlets as $x) {
 		if (!in_array($x,$xs)) unset($outlets[array_search($x,$outlets)]);
 	    }
@@ -147,7 +168,16 @@ class Market_API_v2 {
 	$delivery_price = $this->std_delivery;
 	$expensive_groups = $db->getExpensiveGroups();
 	$city_not_found = false;
-	if ($data->cart->delivery->region->id == 213)   {     // Moscow city 
+	$city_name = $geoCoder->extractCity($data);
+        $city_box = $geoCoder->box($city_name);
+        $in_polygon = $city_box->inside($polygon);
+	if (($data->cart->delivery->region->id == 213) OR ($in_polygon))   {     // 213 == Moscow city 
+
+        if($data->cart->delivery->region->id != 213)
+	    $base_delivery = 500;
+        else
+	    $base_delivery =$delivery_price;
+
 	if (count($outlets)>0) {
 	    $outlets_list = array();
 	    foreach ($outlets as $outlet) {
@@ -165,10 +195,11 @@ class Market_API_v2 {
 	    $res['cart']['paymentMethods'] = $this->paymentMethods[0];
 	} 
 	else  {$res['cart']['paymentMethods'] = $this->paymentMethods[1];}
+	if ($delivery_flag)
 	    $res['cart']['deliveryOptions'][] = array(
 		'type' => 'DELIVERY',
 		'serviceName' => 'Собственная служба доставки',
-		'price' => $grand_total < 5000 ? 190 : $delivery_price,
+		'price' => $base_delivery,
 		'dates' => array ('fromDate' => date('d-m-Y', time() + 24*60*60))); 		//  Hardcoded for "tomorrow"
 
     } else {
@@ -181,7 +212,7 @@ class Market_API_v2 {
     if (isset($ems_regions[$upper])) {
 	$dest = $ems_regions[$upper]; 
 	}
-    $sub = is_object($sub->parent) ? $sub->parent : false;
+    $sub = ((is_object($sub)) && (isset($sub->parent)) && (is_object($sub->parent))) ? $sub->parent : false;
 	
     }
 
@@ -213,13 +244,15 @@ class Market_API_v2 {
 
      }
     
-    
-    
     } 
 
     foreach ($data->cart->items as $item) {
 
-	    if (($stock = $db->inStock($item->offerId)) and (!$city_not_found)) $delivery = true; else $delivery = false;
+	    if (($stock = $db->inStock($item->offerId)) and (!$city_not_found)) $delivery = true; else {
+		$delivery = false;
+	    } 
+	    if (!$stock) $stock = array();
+
 	    $outlets = array_intersect($outlets, $stock);
 	    if (!in_array($item->feedCategoryId, $expensive_groups)) { $delivery_price = $this->special_delivery; }
 	    if ($price = $db->getPrice($item->offerId)) {
@@ -379,7 +412,7 @@ if (strpos($route,"/page/"))
     $api->page = (int)substr($route,strpos($route,"/page/")+6);
     $route = substr($route,0,strpos($route,"/page"));
 }
-
+file_put_contents('/tmp/cpa.log',"INBOUUND --- ".date(DATE_RFC2822).PHP_EOL.$HTTP_RAW_POST_DATA.PHP_EOL."----".PHP_EOL, FILE_APPEND);
 switch ($route) {
 
     case 'cart':
