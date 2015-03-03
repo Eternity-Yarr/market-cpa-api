@@ -19,7 +19,6 @@ include('classes/bitrix.class.php');
 include('lang/api.lang.php'); 
 // Translation trait
 
-
 spl_autoload_register(function ($class) {
     include './classes/geo/' . $class . '.class.php';
 });
@@ -33,7 +32,6 @@ $geoCoder = new GeoCode();
 
 class Market_API_v2 {
     use Market_API_v2_russian;
-
 
     private $baseurl = 'https://api.partner.market.yandex.ru/v2/';
 
@@ -62,7 +60,6 @@ class Market_API_v2 {
 
 
     function __construct($key, $secret, $token, $campaignId, $login, $auth) {
-
 	$this->cc_key = $key;
 	$this->cc_secret = $secret;
 	$this->token = $token;
@@ -86,9 +83,7 @@ class Market_API_v2 {
     'DELIVERY' 	 => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'USER_REFUSED_QUALITY', 'SHOP_FAILED'),
     'PICKUP'  	 => array('USER_UNREACHABLE','USER_CHANGED_MIND','USER_REFUSED_DELIVERY','USER_REFUSED_PRODUCT', 'USER_REFUSED_QUALITY', 'SHOP_FAILED'));
 
-
     private function curl_oauth_exec($url, $put=false, $put_json=false) {
-
         $ch = curl_init();
 	$httpheader = array('Authorization:
 		OAuth
@@ -109,7 +104,6 @@ class Market_API_v2 {
     }
 
     function error_400($db=false){
-
 	header('HTTP/1.0 400 Bad Request');
 	if ($db) $db->close();
 	exit();
@@ -117,7 +111,6 @@ class Market_API_v2 {
 
 
     function error_500($db=false){
-
 	header('HTTP/1.0 500 Internal Server Error');
 	if ($db) $db->close();
 	exit();
@@ -125,7 +118,6 @@ class Market_API_v2 {
 
 
     function ok_200($output){
-
 	header("HTTP/1.1 200 OK \r\n");
         header("Content-Type: application/json;charset=utf-8\r\n");
 	$encoded = json_encode($output,JSON_UNESCAPED_UNICODE);
@@ -134,7 +126,6 @@ class Market_API_v2 {
     }
 
     function POST_Cart($db, $data){
-
     //  implementation of  POST /cart call
     //  http://api.yandex.ru/market/partner/doc/dg/reference/post-cart.xml
     //  recieves json_decoded object and db link
@@ -145,13 +136,12 @@ class Market_API_v2 {
     global $geoCoder;
     global $polygon;
 
-
 	// Proper response structure
 	$res = array('cart' => array('items' => array(), 'deliveryOptions' => array(), 'paymentMethods' => array()));
 	$outlets = $db->outlets;
 	$delivery_flag = true;
 	foreach ($data->cart->items as $item) { 
-	    $xs= $db->inStockForDelivery($item->offerId);
+	    $xs = $db->inStockForDelivery($item->offerId);
 	    $delivery_flag = $delivery_flag && $db->inStock($item->offerId);
 	    foreach($outlets as $x) {
 		if (!in_array($x,$xs)) unset($outlets[array_search($x,$outlets)]);
@@ -201,7 +191,6 @@ class Market_API_v2 {
 		'serviceName' => 'Собственная служба доставки',
 		'price' => $base_delivery,
 		'dates' => array ('fromDate' => date('d-m-Y', time() + 24*60*60))); 		//  Hardcoded for "tomorrow"
-
     } else {
     $ems = new EMSDelivery();
     $ems_regions = $ems->emsGetLocations(EMS::emsRussia);
@@ -240,14 +229,10 @@ class Market_API_v2 {
 		'price'		=> 0,
 		'dates'		=> array ( 'fromDate' => date('d-m-Y', time()),'toDate' => date('d-m-Y', time()+24*60*60)),
 		'outlets'	=> array(array('id' => array_values($db->outlets)[0])));
-
-
      }
-    
     } 
 
     foreach ($data->cart->items as $item) {
-
 	    if (($stock = $db->inStock($item->offerId)) and (!$city_not_found)) $delivery = true; else {
 		$delivery = false;
 	    } 
@@ -265,9 +250,7 @@ class Market_API_v2 {
 				'delivery'	=> $delivery );
 	    }
 	    else error_500($db);
-
 	}
-
 
 	return $res;
     }
@@ -296,7 +279,6 @@ class Market_API_v2 {
 	} else {
 	    return false;
 	}
-
     }
 
     function POST_OrderStatus($db, $data){
@@ -307,8 +289,6 @@ class Market_API_v2 {
     // returns true in case of success or false otherwise
     // also logs history (if needed)
     //
-
-
 	$db->saveHistory(
 	    $data->order->id,
 	    $data->order->status,
@@ -320,11 +300,9 @@ class Market_API_v2 {
 	    $data->order))
 	    return true;
 	else return false;
-
 	}
 
     function PUT_OrderStatus($db,$id,$status,$substatus, $baseurl){
-
     //
     // implementation of PUT order/status request
     // http://api.yandex.ru/market/partner/doc/dg/reference/put-campaigns-id-orders-id-status.xml
@@ -332,8 +310,6 @@ class Market_API_v2 {
     // redirects 301 to orders list page, or error 500 otherwise
     // logs history if needed
     //
-
-
 	$put_json = array("order"=> array("status" => $status));
 	if ($status == 'CANCELLED') $put_json['order']['substatus'] = $substatus;
 
@@ -347,25 +323,20 @@ class Market_API_v2 {
 
 	header("HTTP 1.0 301 Moved Permanently");
 	header("Location: ".$baseurl."/orders");
-
-
     }
 
     function PUT_DeliveryMethod($db){
-
 	$this->ni_501($db);
     }
 
 
     function GET_Orders($debug = false)  {
-
 	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders.json?pageSize=50&page='.$this->page;
 	$ret = $this->curl_oauth_exec($url);
 	return $ret;
     }
 
     function GET_Order($orderId){
-
 	$url = $this->baseurl.'campaigns/'.$this->campaignId.'/orders/'.$orderId.'.json';
 	$ret = $this->curl_oauth_exec($url);
 
@@ -375,7 +346,6 @@ class Market_API_v2 {
 
 
     function ni_501($db){
-
 	header("HTTP/1.0 501 Not implemented");
 	if ($db) $db->close();
 	exit();
@@ -383,7 +353,6 @@ class Market_API_v2 {
 
 
     function validate_auth(){
-
 	$headers = getallheaders();
 	if (
 	(!isset($headers['Authorization']))
@@ -393,11 +362,9 @@ class Market_API_v2 {
 	((isset($headers['Authorization'])) AND ($headers['Authorization']!= $this->auth_token)))  {
 	header('HTTP/1.0 403 Unauthorized');
 	die();
-
 	} else return true;
     }
 }
-
 
 $api = new Market_API_v2($cc_key, $cc_secret, $token, $campaignId, $login, $auth);
 
@@ -407,8 +374,7 @@ $api = new Market_API_v2($cc_key, $cc_secret, $token, $campaignId, $login, $auth
 $db = new dbo_bitrix($DBLogin,$DBPassword, $DBName);
 
 $route = isset($_GET['route']) ? $_GET['route'] : '';
-if (strpos($route,"/page/"))
-{
+if (strpos($route,"/page/")) {
     $api->page = (int)substr($route,strpos($route,"/page/")+6);
     $route = substr($route,0,strpos($route,"/page"));
 }
@@ -465,6 +431,4 @@ switch ($route) {
 }
 
 $db->close();
-
-
 ?>
