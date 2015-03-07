@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <log4php:configuration xmlns:log4php="http://logging.apache.org/log4php/" threshold="all">
-	<appender name="default" class="LoggerAppenderRollingFile">
+	<appender name="general" class="LoggerAppenderRollingFile" additivity="false">
 		<layout class="LoggerLayoutPattern">
 			<param name="conversionPattern" value="%date{Y-m-d H:i:s} %-5p [%t] %c: %m%n"/>
 		</layout>
@@ -26,6 +26,6 @@
 	</logger>
 	<root>
 		<level value="DEBUG" />
-		<appender_ref ref="default" />
+		<appender_ref ref="general" />
 	</root>
 </log4php:configuration>
