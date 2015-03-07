@@ -10,6 +10,20 @@
 		<param name="maxFileSize" value="15MB"/>
 		<param name="compress" value="true"/>
 	</appender>
+	<appender name="requests" class="LoggerAppenderRollingFile">
+		<layout class="LoggerLayoutPattern">
+			<param name="conversionPattern" value="%date{Y-m-d H:i:s} %-5p [%t] %c: %m%n"/>
+		</layout>
+		<param name="file" value="/tmp/requests.log"/>
+		<param name="append" value="true"/>
+		<param name="maxBackupIndex" value="20"/>
+		<param name="maxFileSize" value="15MB"/>
+		<param name="compress" value="true"/>
+	</appender>
+	<logger name="requests">
+		<level value="INFO" />
+		<appender_ref ref="requests"/>
+	</logger>
 	<root>
 		<level value="DEBUG" />
 		<appender_ref ref="default" />
