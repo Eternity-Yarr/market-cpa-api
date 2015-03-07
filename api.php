@@ -7,20 +7,24 @@
  * CC0 1.0 license.
  */
 
-include('config.inc.php');  // Organization specific stuff
-include('dbconn.php');  // Host specific thingies
+require_once dirname(__FILE__).'/logging-log4php/src/main/php/Logger.php';
+Logger::configure(dirname(__FILE__).'/log4php.xml');
+$log = Logger::getLogger("api");
 
-include('classes/dbo.class.php');
-include('classes/ems.class.php');
+include(dirname(__FILE__).'/config.inc.php');  // Organization specific stuff
+include(dirname(__FILE__).'/dbconn.php');  // Host specific thingies
+
+include(dirname(__FILE__).'/classes/dbo.class.php');
+include(dirname(__FILE__).'/classes/ems.class.php');
 
 // Bitrix implementation of abstract class dbo
-include('classes/bitrix.class.php');
+include(dirname(__FILE__).'/classes/bitrix.class.php');
 
-include('lang/api.lang.php'); 
+include(dirname(__FILE__).'/lang/api.lang.php'); 
 // Translation trait
 
 spl_autoload_register(function ($class) {
-    include './classes/geo/' . $class . '.class.php';
+    include dirname(__FILE__).'/classes/geo/' . $class . '.class.php';
 });
 
 // Bounding polygon for geocoding of delivery zone
