@@ -9,7 +9,20 @@
 
 require_once dirname(__FILE__).'/logging-log4php/src/main/php/Logger.php';
 Logger::configure(dirname(__FILE__).'/log4php.xml');
-$log = Logger::getLogger("api");
+$log = Logger::getLogger("root");
+
+spl_autoload_register(
+  function ($class) {
+  	$baseDir = dirname(__FILE__).'/classes/';
+	if(file_exists($baseDir.'geo/' . $class . '.class.php')) {
+    	include $baseDir.'geo/' . $class . '.class.php'; 
+	} else if(file_exists($baseDir.'model/' . $class . '.class.php')) {
+		include $baseDir.'model/' . $class . '.class.php'; 
+	} else {
+		throw new Exception("Class ".$class." loading failed!");
+	}
+  }
+);
 
 include(dirname(__FILE__).'/config.inc.php');  // Organization specific stuff
 include(dirname(__FILE__).'/dbconn.php');  // Host specific thingies
@@ -23,9 +36,6 @@ include(dirname(__FILE__).'/classes/bitrix.class.php');
 include(dirname(__FILE__).'/lang/api.lang.php'); 
 // Translation trait
 
-spl_autoload_register(function ($class) {
-    include dirname(__FILE__).'/classes/geo/' . $class . '.class.php';
-});
 
 // Bounding polygon for geocoding of delivery zone
 // extracted from yandex maps with this call : ymaps.map.instance.geoObjects.each(function(data){console.log(JSON.stringify(data.geometry.getCoordinates()))});
@@ -36,6 +46,7 @@ $geoCoder = new GeoCode();
 
 class Market_API_v2 {
     use Market_API_v2_russian;
+    private $log;
 
     private $baseurl = 'https://api.partner.market.yandex.ru/v2/';
 
@@ -64,6 +75,7 @@ class Market_API_v2 {
 
 
     function __construct($key, $secret, $token, $campaignId, $login, $auth) {
+	$this->log = Logger::getLogger("core");
 	$this->cc_key = $key;
 	$this->cc_secret = $secret;
 	$this->token = $token;
@@ -135,16 +147,23 @@ class Market_API_v2 {
     //  recieves json_decoded object and db link
     //  returns well formed array, for further json_encode and ouput
     //  or HTTP 500 error
+    $this->log->debug("Processing CART request");
 
     //FIXME: dependency!
     global $geoCoder;
     global $polygon;
 
+
+
 	// Proper response structure
 	$res = array('cart' => array('items' => array(), 'deliveryOptions' => array(), 'paymentMethods' => array()));
 	$outlets = $db->outlets;
 	$delivery_flag = true;
-	foreach ($data->cart->items as $item) { 
+	$items = $data->cart->items;
+	$this->log->debug("There is ".count($items)." items in request");
+	foreach ($data->cart->items as $parsedItem) { 
+		$item = new Item($parsedItem);
+		$this->log->debug("Processing ".$item);
 	    $xs = $db->inStockForDelivery($item->offerId);
 	    $delivery_flag = $delivery_flag && $db->inStock($item->offerId);
 	    foreach($outlets as $x) {
