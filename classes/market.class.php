@@ -194,15 +194,15 @@ class Market_API_v2 {
 		    $upper = mb_convert_case($sub->name, MB_CASE_UPPER, "UTF-8");
 
 		    if (isset($ems_regions[$upper])) {
-		    	$this->log->debug("Identified as " . $dest . " region");
 				$dest = $ems_regions[$upper]; 
+		    	$this->log->debug("Identified as " . $dest . " region");
 			}
 		    $sub = ((is_object($sub)) && (isset($sub->parent)) && (is_object($sub->parent))) ? $sub->parent : false;
 	    }
 
 	    $res['cart']['paymentMethods'] = $this->paymentMethods[1];
 	    $weight = 0;
-	    foreach ($data->cart->items as $item) { $weight += $db->getWeight($item->offerId)*$item->count; }
+	    foreach ($data->cart->items as $item) { $weight += $db->getWeight(new Item($item))*$item->count; }
 	    $this->log->debug("Weight is set to ". $weight);
 	    if ($weight > $ems->emsGetMaxWeight()) {
 	    	$this->log->debug("Weight exceeded maximum weight for EMS");
