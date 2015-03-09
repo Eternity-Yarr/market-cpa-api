@@ -1,4 +1,5 @@
 classes/bitrix.class.php
 config.inc.php
+cli-test.php
 dbconn.php
 index.php
