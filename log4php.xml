@@ -10,7 +10,7 @@
 		<param name="maxFileSize" value="15MB"/>
 		<param name="compress" value="true"/>
 	</appender>
-	<appender name="requests" class="LoggerAppenderRollingFile">
+	<appender name="requests" class="LoggerAppenderRollingFile" additivity="false">
 		<layout class="LoggerLayoutPattern">
 			<param name="conversionPattern" value="%date{Y-m-d H:i:s} %-5p [%t] %c: %m%n"/>
 		</layout>

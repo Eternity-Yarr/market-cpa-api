@@ -135,6 +135,7 @@ class Market_API_v2 {
 		$grand_total += $item->count * $price;
 	    }
 	}
+	$this->log->debug("Grand total for this order is ".$grand_total);
 
 	$delivery_price = $this->std_delivery;
 	$expensive_groups = $db->getExpensiveGroups();
@@ -144,15 +145,19 @@ class Market_API_v2 {
         $in_polygon = $city_box->inside($this->polygon);
 	if (($data->cart->delivery->region->id == 213) OR ($in_polygon))   {     // 213 == Moscow city 
 
-        if($data->cart->delivery->region->id != 213)
-	    $base_delivery = 500;
-        else
-	    $base_delivery =$delivery_price;
+        if($data->cart->delivery->region->id != 213) {
+		    $base_delivery = 500;
+	       	$this->log->debug("Delivery to polygon area for ". $base_delivery);
+		} else {
+		    $base_delivery =$delivery_price;
+		    $this->log->debug("Delivery is within MOSCOW for " . $base_delivery);
+		}
 
-	if (count($outlets)>0) {
+	if (count($outlets) > 0) {
+		$this->log->debug("Item is in pickup store, adding PICKUP delivery option");
 	    $outlets_list = array();
 	    foreach ($outlets as $outlet) {
-		$outlets_list[] = array('id' => $outlet);
+			$outlets_list[] = array('id' => $outlet->extId);
 	    }
 	    $res['cart']['deliveryOptions'][] = array(
 		'type'		=> 'PICKUP',
@@ -163,54 +168,72 @@ class Market_API_v2 {
 	}
 	if ($grand_total < $this->payment_threshold) 
 	{
+		$this->log->debug("Grand total is less than threshold, allowing CASH_ON_DELIVERY");
 	    $res['cart']['paymentMethods'] = $this->paymentMethods[0];
-	} 
-	else  {$res['cart']['paymentMethods'] = $this->paymentMethods[1];}
-	if ($delivery_flag)
-	    $res['cart']['deliveryOptions'][] = array(
-		'type' => 'DELIVERY',
-		'serviceName' => 'Собственная служба доставки',
-		'price' => $base_delivery,
-		'dates' => array ('fromDate' => date('d-m-Y', time() + 24*60*60))); 		//  Hardcoded for "tomorrow"
-    } else {
-    $ems = new EMSDelivery();
-    $ems_regions = $ems->emsGetLocations(EMS::emsRussia);
-    if (is_object($data->cart->delivery->region->parent)) $sub = $data->cart->delivery->region->parent;
-    while ($sub) {
-    $upper = mb_convert_case($sub->name, MB_CASE_UPPER, "UTF-8");
-
-    if (isset($ems_regions[$upper])) {
-	$dest = $ems_regions[$upper]; 
+	} else  {
+		$this->log->debug("Grand total is greater than threshold, SHOP_PREPAID payment method");
+		$res['cart']['paymentMethods'] = $this->paymentMethods[1];
 	}
-    $sub = ((is_object($sub)) && (isset($sub->parent)) && (is_object($sub->parent))) ? $sub->parent : false;
-	
-    }
-
-    $res['cart']['paymentMethods'] = $this->paymentMethods[1];
-    $weight = 0;
-    foreach ($data->cart->items as $item) { $weight += $db->getWeight($item->offerId)*$item->count; }
-
-    if ($weight > $ems->emsGetMaxWeight()) $terms = false; else  $terms = $ems->emsCalculate($dest,$weight);
-    
-    if ($terms) 
-	{ $price = round($terms['price']);
-	  $eta_min = $terms['min'];
-	  $eta_max = $terms['max'];
-        $res['cart']['deliveryOptions'][] = array(
-	    'type' => 'POST',
-	    'serviceName' => 'EMS Почта России',
-	    'price' => $price,
-	    'dates' => array('fromDate' => date('d-m-Y', time() + $eta_min*24*60*60),'toDate' => date('d-m-Y', time() + $eta_max*24*60*60)));
+	if ($delivery_flag) {
+		$this->log->debug('Cart is legible for delivery, adding option to response');
+		    $res['cart']['deliveryOptions'][] = array(
+			'type' => 'DELIVERY',
+			'serviceName' => 'Собственная служба доставки',
+			'price' => $base_delivery,
+			'dates' => array ('fromDate' => date('d-m-Y', time() + 24*60*60))); 	//  Hardcoded for "tomorrow"
+		} else {
+			$this->log->debug('Cart is illegible for delivery, skipping');
+		}
     } else {
-    unset($res['cart']['deliveryOptions']);
-    $city_not_found = true;
-    $res['cart']['deliveryOptions'][] = array(
-		'type'		=> 'PICKUP',
-		'serviceName'   => 'Самовывоз',
-		'price'		=> 0,
-		'dates'		=> array ( 'fromDate' => date('d-m-Y', time()),'toDate' => date('d-m-Y', time()+24*60*60)),
-		'outlets'	=> array(array('id' => array_values($db->outlets)[0])));
-     }
+    	$this->log->debug('Delivery address is outside of moscow and polygon, falling back to EMS');
+	    $ems = new EMSDelivery();
+	    $ems_regions = $ems->emsGetLocations(EMS::emsRussia);
+	    $this->log->debug('Got '.count($ems_regions). ' regions from EMS REST');
+	    if (is_object($data->cart->delivery->region->parent)) $sub = $data->cart->delivery->region->parent;
+	    while ($sub) {
+		    $upper = mb_convert_case($sub->name, MB_CASE_UPPER, "UTF-8");
+
+		    if (isset($ems_regions[$upper])) {
+		    	$this->log->debug("Identified as " . $dest . " region");
+				$dest = $ems_regions[$upper]; 
+			}
+		    $sub = ((is_object($sub)) && (isset($sub->parent)) && (is_object($sub->parent))) ? $sub->parent : false;
+	    }
+
+	    $res['cart']['paymentMethods'] = $this->paymentMethods[1];
+	    $weight = 0;
+	    foreach ($data->cart->items as $item) { $weight += $db->getWeight($item->offerId)*$item->count; }
+	    $this->log->debug("Weight is set to ". $weight);
+	    if ($weight > $ems->emsGetMaxWeight()) {
+	    	$this->log->debug("Weight exceeded maximum weight for EMS");
+	    	$terms = false; 
+	    } else {
+	     	$terms = $ems->emsCalculate($dest,$weight);
+	     	$this->log->debug("Calculated delivery price is ". $terms['price']);
+	 	}
+	    
+	    if ($terms) 
+		{ 
+			$this->log->debug('Adding EMS method');
+			$price = round($terms['price']);
+		  $eta_min = $terms['min'];
+		  $eta_max = $terms['max'];
+	        $res['cart']['deliveryOptions'][] = array(
+		    'type' => 'POST',
+		    'serviceName' => 'EMS Почта России',
+		    'price' => $price,
+		    'dates' => array('fromDate' => date('d-m-Y', time() + $eta_min*24*60*60),'toDate' => date('d-m-Y', time() + $eta_max*24*60*60)));
+	    } else {
+	    	$this->log->debug('Falling back to solely PICKUP');
+	    unset($res['cart']['deliveryOptions']);
+	    $city_not_found = true;
+	    $res['cart']['deliveryOptions'][] = array(
+			'type'		=> 'PICKUP',
+			'serviceName'   => 'Самовывоз',
+			'price'		=> 0,
+			'dates'		=> array ( 'fromDate' => date('d-m-Y', time()),'toDate' => date('d-m-Y', time()+24*60*60)),
+			'outlets'	=> array(array('id' => array_values($db->outlets)[0])));
+	     }
     } 
 
     foreach ($data->cart->items as $item) {
