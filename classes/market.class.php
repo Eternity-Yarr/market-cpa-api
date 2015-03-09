@@ -106,7 +106,7 @@ class Market_API_v2 {
     //  recieves json_decoded object and db link
     //  returns well formed array, for further json_encode and ouput
     //  or HTTP 500 error
-    $this->log->debug("Processing CART request");
+    $this->log->debug("Processing POST_Cart request");
 
 	// Proper response structure
 	$res = array('cart' => array('items' => array(), 'deliveryOptions' => array(), 'paymentMethods' => array()));
@@ -255,6 +255,7 @@ class Market_API_v2 {
 	    }
 	    else error_500($db);
 	}
+	$this->log->debug("Finished serving POST_Cart request");
 
 	return $res;
     }
