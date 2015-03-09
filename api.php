@@ -12,18 +12,7 @@ Logger::configure(dirname(__FILE__).'/log4php.xml');
 $log = Logger::getLogger("root");
 $requestsLog = Logger::getLogger("requests");
 
-spl_autoload_register(
-  function ($class) {
-  	$baseDir = dirname(__FILE__).'/classes/';
-	if(file_exists($baseDir.'geo/' . $class . '.class.php')) {
-    	include $baseDir.'geo/' . $class . '.class.php'; 
-	} else if(file_exists($baseDir.'model/' . $class . '.class.php')) {
-		include $baseDir.'model/' . $class . '.class.php'; 
-	} else {
-		throw new Exception("Class ".$class." loading failed!");
-	}
-  }
-);
+include(dirname(__FILE__).'/classloader.php');
 
 include(dirname(__FILE__).'/config.inc.php');  // Organization specific stuff
 include(dirname(__FILE__).'/dbconn.php');  // Host specific thingies
@@ -47,8 +36,9 @@ $api = new Market_API_v2($cc_key, $cc_secret, $token, $campaignId, $login, $auth
 
 // Some bitrix specific API thingies
 // those credentials variables are system-wide-set in dbconn.php include
+// except for outletsProvider, which one initialized in config.inc.php
 
-$db = new dbo_bitrix($DBLogin,$DBPassword, $DBName);
+$db = new dbo_bitrix($DBLogin, $DBPassword, $DBName, $outletsProvider);
 
 $route = isset($_GET['route']) ? $_GET['route'] : '';
 if (strpos($route,"/page/")) {

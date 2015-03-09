@@ -10,13 +10,15 @@
 // You should implement this simple methods by yourself, according to your CMS or DB scheme
 
 abstract class dbo extends mysqli {
-    private $log; 
-    protected $link;  		// mysqli link holder
-    public $outlets;  		// available outlets id
+    private $log;
+    public $outletsProvider;
+    protected $link;  		    // mysqli link holder
 
-    public final function __construct($user, $pass, $db) {
+
+    public final function __construct($user, $pass, $db, OutletsProvider $outletsProvider) {
     $this->log = Logger::getLogger("dbo");
 	$this->link = new mysqli('localhost', $user, $pass, $db);
+    $this->outletsProvider = $outletsProvider;
 
 	if (mysqli_connect_error()) {
 	       $this->log->error('No can connect('. mysqli_connect_errno() .') '. mysqli_connect_error());

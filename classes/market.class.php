@@ -60,11 +60,11 @@ class Market_API_v2 {
 
     private function curl_oauth_exec($url, $put=false, $put_json=false) {
         $ch = curl_init();
-	$httpheader = array('Authorization:
-		OAuth
-		oauth_token="'.$this->token.'",
-		oauth_client_id="'.$this->cc_key.'",
-		oauth_login="'.$this->login.'"');
+		$httpheader = array('Authorization:
+			OAuth
+			oauth_token="'.$this->token.'",
+			oauth_client_id="'.$this->cc_key.'",
+			oauth_login="'.$this->login.'"');
 	if (($put) AND ($put_json)) {
 	    $httpheader[] = 'Content-Type: application/json';
 	    $httpheader[] = 'Content-Length: ' . strlen($put_json);
@@ -72,32 +72,32 @@ class Market_API_v2 {
 	    curl_setopt($ch, CURLOPT_POSTFIELDS,$put_json);
 	}
         curl_setopt($ch, CURLOPT_HTTPHEADER, $httpheader );
-	curl_setopt($ch, CURLOPT_URL, $url );
+		curl_setopt($ch, CURLOPT_URL, $url );
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
 	return curl_exec($ch);
     }
 
     function error_400($db=false){
-	header('HTTP/1.0 400 Bad Request');
-	if ($db) $db->close();
-	exit();
+		header('HTTP/1.0 400 Bad Request');
+		if ($db) $db->close();
+		exit();
     }
 
 
     function error_500($db=false){
-	header('HTTP/1.0 500 Internal Server Error');
-	if ($db) $db->close();
-	exit();
+		header('HTTP/1.0 500 Internal Server Error');
+		if ($db) $db->close();
+		exit();
     }
 
 
     function ok_200($output){
-	header("HTTP/1.1 200 OK \r\n");
-        header("Content-Type: application/json;charset=utf-8\r\n");
-	$encoded = json_encode($output,JSON_UNESCAPED_UNICODE);
-	file_put_contents('/tmp/cpa.log', "OUTBOUND --- ".date(DATE_RFC2822).PHP_EOL.$encoded.PHP_EOL.PHP_EOL, FILE_APPEND);
-        echo ($encoded);
+		header("HTTP/1.1 200 OK \r\n");
+	        header("Content-Type: application/json;charset=utf-8\r\n");
+		$encoded = json_encode($output,JSON_UNESCAPED_UNICODE);
+		Logger::getLogger("requests")->info('--- OUTBOUND ---'.PHP_EOL.$encoded.PHP_EOL.'---');
+	    echo ($encoded);
     }
 
     function POST_Cart($db, $data){
@@ -110,23 +110,28 @@ class Market_API_v2 {
 
 	// Proper response structure
 	$res = array('cart' => array('items' => array(), 'deliveryOptions' => array(), 'paymentMethods' => array()));
-	$outlets = $db->outlets;
+	$outlets = $db->outletsProvider->outlets();
 	$delivery_flag = true;
 	$items = $data->cart->items;
 	$this->log->debug("There is ".count($items)." items in request");
 	foreach ($data->cart->items as $parsedItem) { 
 		$item = new Item($parsedItem);
 		$this->log->debug("Processing ".$item);
-	    $xs = $db->inStockForDelivery($item->offerId);
-	    $delivery_flag = $delivery_flag && $db->inStock($item->offerId);
+	    $xs = $db->inStock($item);
+	    $this->log->debug( count($xs) > 0 ? "it is in stock"  : "not in stock");
+	    $delivery_flag = $delivery_flag && $db->inStock($item);
 	    foreach($outlets as $x) {
-		if (!in_array($x,$xs)) unset($outlets[array_search($x,$outlets)]);
+			if (!in_array($x, $xs)) 
+				unset($outlets[array_search($x, $outlets)]);
 	    }
 	}
+
+	$aliases = array_map(function($outlet) { return $outlet->alias;}, $outlets);
+	$this->log->debug("Resulting outlets list = ". implode("," , $aliases));
 	
 	$grand_total = 0;
         foreach ($data->cart->items as $item) {
-	    if ($price = $db->getPrice($item->offerId)) {
+	    if ($price = $db->getPrice(new Item($item))) {
 		$grand_total += $item->count * $price;
 	    }
 	}
@@ -209,14 +214,14 @@ class Market_API_v2 {
     } 
 
     foreach ($data->cart->items as $item) {
-	    if (($stock = $db->inStock($item->offerId)) and (!$city_not_found)) $delivery = true; else {
+	    if (($stock = $db->inStock(new Item($item))) and (!$city_not_found)) $delivery = true; else {
 		$delivery = false;
 	    } 
 	    if (!$stock) $stock = array();
 
 	    $outlets = array_intersect($outlets, $stock);
 	    if (!in_array($item->feedCategoryId, $expensive_groups)) { $delivery_price = $this->special_delivery; }
-	    if ($price = $db->getPrice($item->offerId)) {
+	    if ($price = $db->getPrice(new Item($item))) {
 		$grand_total += $item->count * $price;
 		$res['cart']['items'][] =
 		    array(	'feedId'	=> $item->feedId,
