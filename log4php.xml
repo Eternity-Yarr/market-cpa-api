@@ -4,7 +4,7 @@
 		<layout class="LoggerLayoutPattern">
 			<param name="conversionPattern" value="%date{Y-m-d H:i:s} %-5p [%t] %c: %m%n"/>
 		</layout>
-		<param name="file" value="/tmp/general.log"/>
+		<param name="file" value="logs/general.log"/>
 		<param name="append" value="true"/>
 		<param name="maxBackupIndex" value="20"/>
 		<param name="maxFileSize" value="15MB"/>
@@ -14,7 +14,7 @@
 		<layout class="LoggerLayoutPattern">
 			<param name="conversionPattern" value="%date{Y-m-d H:i:s} %-5p [%t] %c: %m%n"/>
 		</layout>
-		<param name="file" value="/tmp/requests.log"/>
+		<param name="file" value="logs/requests.log"/>
 		<param name="append" value="true"/>
 		<param name="maxBackupIndex" value="20"/>
 		<param name="maxFileSize" value="15MB"/>

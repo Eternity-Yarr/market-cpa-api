@@ -3,3 +3,4 @@ config.inc.php
 cli-test.php
 dbconn.php
 index.php
+logs/
