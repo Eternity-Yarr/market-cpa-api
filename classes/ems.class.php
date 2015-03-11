@@ -20,6 +20,11 @@ class EMS {
 
 class EMSDelivery extends EMS {
 
+    private $log;
+
+    public function __construct() {
+	$this->log = Logger::getLogger("ems");
+    }
 
     private function httpRequest($url) {
     
@@ -68,15 +73,24 @@ class EMSDelivery extends EMS {
     }
 
     public function emsCalculate($dest,$weight) {
-    
+    if ($dest == '') {
+	$this->log->warn("Got empty destination parameter, would not query EMS");
+	return false;
+    }
+    $this->log->debug("Querying for $dest destination and $weight kg");
     $from = 'city--moskva';  			// HARDCODED from Moscow
     $url = sprintf(EMS::$baseurl.'method=ems.calculate&from=%s&to=%s&weight=%f',$from,$dest,$weight);
     $json = $this->httpRequest($url);
     
     if (($res = json_decode($json)) and (isset($res->rsp->price))) {
+	    $price = print_r($res->rsp->price, 1);
+	    $this->log->debug("Got $price price");
 	    return array('price' => $res->rsp->price,'min'=>$res->rsp->term->min, 'max'=> $res->rsp->term->max);
 	}
-    else return false;
+    else {
+	$this->log->debug("Failed. Got '$json'");
+	return false;
+    }
 
     }
 

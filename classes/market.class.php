@@ -192,10 +192,14 @@ class Market_API_v2 {
 	    if (is_object($data->cart->delivery->region->parent)) $sub = $data->cart->delivery->region->parent;
 	    while ($sub) {
 		    $upper = mb_convert_case($sub->name, MB_CASE_UPPER, "UTF-8");
-
+		    if ($upper == 'МОСКВА И МОСКОВСКАЯ ОБЛАСТЬ')  {
+			$upper = 'МОСКОВСКАЯ ОБЛАСТЬ';
+		    }
+		    $this->log->debug("Trying $upper as delivery address");
 		    if (isset($ems_regions[$upper])) {
 				$dest = $ems_regions[$upper]; 
-		    	$this->log->debug("Identified as " . $dest . " region");
+		    		$this->log->debug("Identified as " . $dest . " region");
+				break;
 			}
 		    $sub = ((is_object($sub)) && (isset($sub->parent)) && (is_object($sub->parent))) ? $sub->parent : false;
 	    }
@@ -208,7 +212,7 @@ class Market_API_v2 {
 	    	$this->log->debug("Weight exceeded maximum weight for EMS");
 	    	$terms = false; 
 	    } else {
-	     	$terms = $ems->emsCalculate($dest,$weight);
+	     	$terms = $ems->emsCalculate($dest, $weight);
 	     	$this->log->debug("Calculated delivery price is ". $terms['price']);
 	 	}
 	    
