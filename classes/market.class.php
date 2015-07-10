@@ -186,6 +186,7 @@ class Market_API_v2 {
 		}
     } else {
     	$this->log->debug('Delivery address is outside of moscow and polygon, falling back to EMS');
+	    $dest = '';
 	    $ems = new EMSDelivery();
 	    $ems_regions = $ems->emsGetLocations(EMS::emsRussia);
 	    $this->log->debug('Got '.count($ems_regions). ' regions from EMS REST');
@@ -236,7 +237,7 @@ class Market_API_v2 {
 			'serviceName'   => 'Самовывоз',
 			'price'		=> 0,
 			'dates'		=> array ( 'fromDate' => date('d-m-Y', time()),'toDate' => date('d-m-Y', time()+24*60*60)),
-			'outlets'	=> array(array('id' => array_values($db->outlets)[0])));
+			'outlets'	=> array(array('id' => array_values($outlets)[0])));
 	     }
     } 
 
