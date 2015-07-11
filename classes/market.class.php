@@ -240,7 +240,7 @@ class Market_API_v2 {
 			'serviceName'   => 'Самовывоз',
 			'price'		=> 0,
 			'dates'		=> array ( 'fromDate' => date('d-m-Y', time()),'toDate' => date('d-m-Y', time()+24*60*60)),
-			'outlets'	=> array(array('id' => array_values($outlets)[0])));
+			'outlets'	=> array(array('id' => array_values($outlets)[0]->extId)));
 	     }
     } 
 
@@ -280,7 +280,7 @@ class Market_API_v2 {
 
     // Proper response structure
         $res = array('order'=> array('id' => "0", 'accepted' => false));
-
+	$this->log->info("Accepting order ".$data->order->id);
         if ($success = $db->addOrder(
 		$data->order->id,
 		$data->order,
@@ -288,8 +288,10 @@ class Market_API_v2 {
 		$data->order->fake == 1 ? 1 : 0 )) {
 	    $res['order']['id'] = (string)$data->order->id;
 	    $res['order']['accepted'] = true;
+	    $this->log->info("Accepted order ".$data->order->id);
 	    return $res;
 	} else {
+	    $this->log->warn("Rejected order ".$data->order->id);
 	    return false;
 	}
     }
