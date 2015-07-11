@@ -2,6 +2,12 @@
 
 class GeoCode {
 
+  private $log;
+
+  public function __construct() {
+    $this->log = Logger::getLogger("geo");
+  }
+
   private function query($addr) { 
     $json = file_get_contents("http://geocode-maps.yandex.ru/1.x/?format=json&kind=locality&results=1&geocode=".urlencode($addr));
     $response = json_decode($json)->response;
@@ -10,6 +16,10 @@ class GeoCode {
   }
 
   function coordinates($addr) {
+    if (empty($addr)) {
+	$this->log->debug("Got empty address query, returning NULL");
+	return NULL;
+    }
     $response = $this->query($addr);
     if($response->GeoObjectCollection->metaDataProperty->GeocoderResponseMetaData->found > 0) {
         $pos = explode(" ",$response->GeoObjectCollection->featureMember[0]->GeoObject->Point->pos);
@@ -20,6 +30,10 @@ class GeoCode {
   }
 
   function box($addr) {
+   if (empty($addr)) {
+	$this->log->debug("Got empty address query, returning NULL");
+	return NULL;
+   }
    $response = $this->query($addr);
     if($response->GeoObjectCollection->metaDataProperty->GeocoderResponseMetaData->found > 0) {
         $bounds = $response->GeoObjectCollection->featureMember[0]->GeoObject->boundedBy->Envelope;
@@ -47,7 +61,7 @@ class GeoCode {
   private function city($node) {
     if($node->type == "CITY") 
       return $node->name;
-    else if (is_object($node->parent))
+    else if ((isset($node->parent)) && is_object($node->parent))
      return $this->city($node->parent);
     else 
      return NULL;

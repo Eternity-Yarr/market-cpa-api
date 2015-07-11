@@ -20,12 +20,12 @@
 		<param name="maxFileSize" value="15MB"/>
 		<param name="compress" value="true"/>
 	</appender>
-	<root>
-		<level value="DEBUG" />
-		<appender_ref ref="general" />
-	</root>
 	<logger name="requests"  additivity="false">
 		<level value="INFO" />
 		<appender_ref ref="requests"/>
 	</logger>
+	<root>
+		<level value="DEBUG" />
+		<appender_ref ref="general" />
+	</root>
 </log4php:configuration>

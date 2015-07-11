@@ -142,7 +142,10 @@ class Market_API_v2 {
 	$city_not_found = false;
 	$city_name = $this->geoCoder->extractCity($data);
         $city_box = $this->geoCoder->box($city_name);
-        $in_polygon = $city_box->inside($this->polygon);
+        if ($city_box != NULL)
+    	  $in_polygon = $city_box->inside($this->polygon);
+	else
+	  $in_polygon = false;
 	if (($data->cart->delivery->region->id == 213) OR ($in_polygon))   {     // 213 == Moscow city 
 
         if($data->cart->delivery->region->id != 213) {
